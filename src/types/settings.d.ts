@@ -342,6 +342,7 @@ export interface SettingsValues {
   timerOvertimeShowAmountOnly: boolean;
   timerOvertimeTextColor: string;
   timerRemoteEnable: boolean;
+  timerRemoteFocusLayout: boolean;
   timerRemotePort: null | string;
   timerShowClock: boolean;
   timerShowOnActionIsland: boolean;

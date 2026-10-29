@@ -476,6 +476,12 @@ export const settingsDefinitions: SettingsItems = {
     subgroup: 'timerDisplay',
     type: 'toggle',
   },
+  timerRemoteFocusLayout: {
+    depends: ['enableTimerDisplay', 'timerRemoteEnable'],
+    group: 'meetingTimer',
+    subgroup: 'timerDisplay',
+    type: 'toggle',
+  },
   timerRemotePort: {
     depends: ['enableTimerDisplay', 'timerRemoteEnable'],
     group: 'meetingTimer',
@@ -1299,6 +1305,7 @@ export const defaultSettings: SettingsValues = {
   timerOvertimeShowAmountOnly: true,
   timerOvertimeTextColor: '#ff0000',
   timerRemoteEnable: false,
+  timerRemoteFocusLayout: false,
   timerRemotePort: '8787',
   timerShowClock: true,
   timerShowOnActionIsland: false,

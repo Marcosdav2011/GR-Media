@@ -85,6 +85,7 @@ export interface TimerData {
   timerOvertimeTextColor?: string;
   /** The planned length of the part being timed, in both timer modes. */
   timerPartTargetSeconds?: number;
+  timerRemoteFocusLayout?: boolean;
   /** Addresses of the tablet timer remote, while it's being served. */
   timerRemoteUrls?: string[];
   /** Show a live clock of the time of day in a corner of the display. */
