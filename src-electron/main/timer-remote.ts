@@ -72,7 +72,7 @@ const PAGE_HTML = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Timer - TM2</title>
+<title>Timer - GR Media</title>
 <link rel="stylesheet" href="/app.css">
 </head>
 <body>

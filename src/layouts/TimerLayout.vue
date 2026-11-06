@@ -16,7 +16,7 @@ void initializeElectronApi('TimerLayout');
 
 useMeta({
   title: 'Timer',
-  titleTemplate: (title) => `${title} · TM2`,
+  titleTemplate: (title) => `${title} · GR Media`,
 });
 
 onMounted(() => {

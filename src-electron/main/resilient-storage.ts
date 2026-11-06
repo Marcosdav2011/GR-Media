@@ -87,7 +87,7 @@ function writeJsonAtomicSync(
  */
 let cachedFallbackDir: null | string = null;
 export function getFallbackDir(): string {
-  cachedFallbackDir ??= join(app.getPath('temp'), PRODUCT_NAME || 'TM2');
+  cachedFallbackDir ??= join(app.getPath('temp'), PRODUCT_NAME || 'GR Media');
   return cachedFallbackDir;
 }
 

@@ -15,7 +15,7 @@ import { useI18n } from 'vue-i18n';
 const SCREEN_FETCH_TIMEOUT_MS = 5000;
 
 /**
- * TEO MEDIA output-screen helper.
+ * GR MEDIA output-screen helper.
  *
  * Screens come straight from Electron, so their order and numbering match what
  * `moveMediaWindow` expects. The screen hosting the main window is never used

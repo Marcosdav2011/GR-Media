@@ -11,7 +11,7 @@ import {
   screen,
   shell,
 } from 'electron';
-import { existsSync } from 'node:fs';
+import { existsSync, renameSync } from 'node:fs';
 import {
   APP_ID,
   IS_DEMO_MODE,
@@ -216,9 +216,10 @@ function configureAppDataPaths() {
       'temp',
       join(portableExecutableDir, `${PRODUCT_NAME} - Temporary Files`),
     );
-    // Profiles created before the TM2 rename stay usable.
+    // Profiles created before the GR Media rename stay usable.
     useLegacyUserDataIfNeeded(
       userDataPath,
+      join(portableExecutableDir, 'TM2 - User Data'),
       join(portableExecutableDir, 'Meeting Media Manager - User Data'),
     );
   } else {
@@ -227,6 +228,7 @@ function configureAppDataPaths() {
     }
     useLegacyUserDataIfNeeded(
       app.getPath('userData'),
+      join(app.getPath('appData'), 'TM2'),
       join(app.getPath('appData'), 'Meeting Media Manager'),
     );
   }
@@ -757,10 +759,28 @@ function setHwAccelDisabled(disabled: boolean, temporary = false) {
 
 function useLegacyUserDataIfNeeded(
   userDataPath: string,
-  legacyUserDataPath: string,
+  ...legacyUserDataPaths: string[]
 ) {
-  if (!existsSync(userDataPath) && existsSync(legacyUserDataPath)) {
+  if (existsSync(userDataPath)) return;
+
+  const legacyUserDataPath = legacyUserDataPaths.find((path) =>
+    existsSync(path),
+  );
+  if (!legacyUserDataPath) return;
+
+  try {
+    renameSync(legacyUserDataPath, userDataPath);
+    log(`Migrated user data from ${legacyUserDataPath}`, 'electron', 'log');
+  } catch (error) {
+    // The old build may still hold files open; reuse its folder in place so
+    // profiles and settings are never lost.
     app.setPath('userData', legacyUserDataPath);
+    log(
+      `Could not migrate user data; using ${legacyUserDataPath} instead`,
+      'electron',
+      'warn',
+      error,
+    );
   }
 }
 

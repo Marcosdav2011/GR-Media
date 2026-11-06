@@ -216,7 +216,7 @@ const reportUpdaterError = async (error: Error, message?: string) => {
 };
 
 export async function initUpdater() {
-  if (UPDATES_DISABLED) return; // TM2 has no update channel of its own
+  if (UPDATES_DISABLED) return; // GR Media has no update channel of its own
   if (await pathExists(await getUpdatesDisabledPath())) return; // Skip updater if updates are disabled by user
   if (isPortable()) return; // Skip updater for portable version
 

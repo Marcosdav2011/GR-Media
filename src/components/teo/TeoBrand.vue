@@ -1,47 +1,25 @@
 <template>
   <span class="teo-brand" :class="`teo-brand--${tone}`">
-    <svg aria-hidden="true" class="teo-brand__mark" viewBox="0 0 48 48">
-      <defs>
-        <linearGradient
-          id="teo-brand-gradient"
-          gradientUnits="userSpaceOnUse"
-          x1="4"
-          x2="44"
-          y1="2"
-          y2="46"
-        >
-          <stop stop-color="#2dd4bf" />
-          <stop offset=".55" stop-color="#0d9488" />
-          <stop offset="1" stop-color="#4f46e5" />
-        </linearGradient>
-      </defs>
-      <rect fill="url(#teo-brand-gradient)" height="48" rx="14" width="48" />
-      <text
-        dominant-baseline="central"
-        fill="#fff"
-        font-family="'Segoe UI', system-ui, sans-serif"
-        font-size="17"
-        font-weight="800"
-        letter-spacing="-0.5"
-        text-anchor="middle"
-        x="24"
-        y="25"
-      >
-        TM2
-      </text>
-      <circle cx="14.5" cy="13" fill="#fff" opacity=".75" r="1.6" />
-    </svg>
+    <img alt="" aria-hidden="true" class="teo-brand__mark" :src="markSrc" />
     <span class="teo-brand__text">
-      <span class="teo-brand__name">TM2</span>
-      <span class="teo-brand__sub">TEO MEDIA</span>
+      <span class="teo-brand__name">GR Media</span>
+      <span class="teo-brand__sub">MEDIA STUDIO</span>
     </span>
   </span>
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{ tone?: 'dark' | 'light' }>(), {
+import markColor from 'src/assets/brand/gr-media-mark-color.png';
+import markLight from 'src/assets/brand/gr-media-mark-light.png';
+import { computed } from 'vue';
+
+const props = withDefaults(defineProps<{ tone?: 'dark' | 'light' }>(), {
   tone: 'dark',
 });
+
+const markSrc = computed(() =>
+  props.tone === 'light' ? markColor : markLight,
+);
 </script>
 
 <style scoped>
@@ -52,10 +30,10 @@ withDefaults(defineProps<{ tone?: 'dark' | 'light' }>(), {
 }
 
 .teo-brand__mark {
-  filter: drop-shadow(0 6px 14px rgba(13, 148, 136, 0.35));
+  filter: drop-shadow(0 6px 14px rgba(29, 95, 168, 0.4));
   flex-shrink: 0;
-  height: 38px;
-  width: 38px;
+  height: 36px;
+  width: auto;
 }
 
 .teo-brand__text {
@@ -67,11 +45,11 @@ withDefaults(defineProps<{ tone?: 'dark' | 'light' }>(), {
 .teo-brand__name {
   font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.04em;
 }
 
 .teo-brand__sub {
-  color: #5eead4;
+  color: #7cb7ff;
   font-size: 0.52rem;
   font-weight: 600;
   letter-spacing: 0.26em;
@@ -88,6 +66,6 @@ withDefaults(defineProps<{ tone?: 'dark' | 'light' }>(), {
 }
 
 .teo-brand--light .teo-brand__sub {
-  color: #0f766e;
+  color: #0b4d8f;
 }
 </style>

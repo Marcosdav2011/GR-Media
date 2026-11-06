@@ -8,7 +8,7 @@ import { captureElectronError } from 'src-electron/main/utils';
 const THUMBNAIL_SIZE = { height: 180, width: 320 };
 
 /**
- * Windows and screens the operator can project. TM2's own windows are left
+ * Windows and screens the operator can project. GR Media's own windows are left
  * out: capturing one of them would put the output inside its own input.
  */
 export const getCaptureSources = async (

@@ -6,7 +6,7 @@ const ELECTRON_MAIN_PATH = fileURLToPath(
   new URL('../../dist/electron/UnPackaged/electron-main.js', import.meta.url),
 );
 const OUT = 'test/playwright/help-shots';
-const PDF_PATH = 'MANUAL-TM2.pdf';
+const PDF_PATH = 'MANUAL-GRMedia.pdf';
 
 const app = await electron.launch({
   args: [
@@ -19,7 +19,7 @@ const app = await electron.launch({
   env: {
     ...process.env,
     M3_DEMO_MODE: '1',
-    PORTABLE_EXECUTABLE_DIR: 'D:/TM2-help-shots',
+    PORTABLE_EXECUTABLE_DIR: 'D:/GRMedia-help-shots',
   },
 });
 
@@ -133,7 +133,7 @@ const base64Pdf = await app.evaluate(async ({ BrowserWindow }) => {
     displayHeaderFooter: true,
     footerTemplate:
       '<div style="width:100%;font-size:8px;font-family:Segoe UI,sans-serif;color:#6b7d89;padding:0 12mm;display:flex;justify-content:space-between;">' +
-      '<span>Manual de TM2</span>' +
+      '<span>Manual de GR Media</span>' +
       '<span><span class="pageNumber"></span> / <span class="totalPages"></span></span>' +
       '</div>',
     headerTemplate: '<div></div>',

@@ -8,7 +8,7 @@
 
     <div class="teo-header__top">
       <button
-        aria-label="TM2"
+        aria-label="GR Media"
         class="teo-brand-btn"
         type="button"
         @click="aboutModal = true"

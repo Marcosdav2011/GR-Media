@@ -91,8 +91,8 @@ describe('getCaptureSources', () => {
   });
 
   it("leaves out the app's own windows, so the output cannot capture itself", async () => {
-    const media = ownWindow('TM2');
-    const main = ownWindow('TM2 main');
+    const media = ownWindow('GR Media');
+    const main = ownWindow('GR Media main');
     windows.length = 0;
     windows.push(media, main);
     getSourcesMock.mockResolvedValue([
@@ -100,10 +100,10 @@ describe('getCaptureSources', () => {
       // Same id as one of our windows...
       makeSource(
         sender.getMediaSourceId(media.webContents as WebContents),
-        'TM2',
+        'GR Media',
       ),
       // ...and another that only shares the title.
-      makeSource('window:99:0', 'TM2 main'),
+      makeSource('window:99:0', 'GR Media main'),
       makeSource('window:10:0', 'PowerPoint'),
     ]);
     const { getCaptureSources } = await import('../capture');
@@ -117,10 +117,10 @@ describe('getCaptureSources', () => {
   });
 
   it('ignores windows the app already closed', async () => {
-    const destroyed = { ...ownWindow('TM2'), isDestroyed: () => true };
+    const destroyed = { ...ownWindow('GR Media'), isDestroyed: () => true };
     windows.length = 0;
     windows.push(destroyed);
-    getSourcesMock.mockResolvedValue([makeSource('window:99:0', 'TM2')]);
+    getSourcesMock.mockResolvedValue([makeSource('window:99:0', 'GR Media')]);
     const { getCaptureSources } = await import('../capture');
 
     const sources = await getCaptureSources(sender);

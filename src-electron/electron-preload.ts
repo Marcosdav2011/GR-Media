@@ -113,6 +113,7 @@ const electronApi: ElectronApi = {
   getLowDiskSpaceStatus: () => invoke('getLowDiskSpaceStatus'),
   getMediaWindowCaptureSize: () => invoke('getMediaWindowCaptureSize'),
   getMediaWindowCaptureSourceId: () => invoke('getMediaWindowCaptureSourceId'),
+  getMonitorPreviews: () => invoke('getMonitorPreviews'),
   getScreenAccessStatus: () => invoke('getScreenAccessStatus'),
   getSharedDataPath: () => invoke('getSharedDataPath'),
   getUpdaterState: () => invoke('getUpdaterState'),

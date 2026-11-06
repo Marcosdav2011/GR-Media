@@ -1070,7 +1070,7 @@ export const automateZoomMediaSharing = async (start: boolean) => {
 
 /**
  * Shares the output window in Zoom while the output shows media, a camera or
- * a window capture, and stops the share TM2 started once it shows none. All of
+ * a window capture, and stops the share GR Media started once it shows none. All of
  * them use the same output window, so one share covers everything and Zoom
  * never sees it drop when switching between them.
  */

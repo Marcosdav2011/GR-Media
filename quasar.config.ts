@@ -18,9 +18,9 @@ const IS_BETA = version.includes('beta');
 const IS_TEST = process.env.TEST_VERSION === 'true';
 
 // App
-const APP_NAME = `TM2${IS_TEST ? '-test' : ''}`;
+const APP_NAME = `GRMedia${IS_TEST ? '-test' : ''}`;
 const PRODUCT_NAME = `${productName}${IS_TEST ? ' - Test' : ''}`;
-const APP_ID = `com.tm2${IS_TEST ? '.test' : ''}.desktop`;
+const APP_ID = `com.grmedia${IS_TEST ? '.test' : ''}.desktop`;
 
 // Sentry
 const SENTRY_ORG = 'jw-projects';
@@ -215,7 +215,7 @@ export default defineConfig((ctx) => {
           useZip: true,
         },
         productName: PRODUCT_NAME,
-        // TM2 ships outside the upstream release feed: no update provider,
+        // GR Media ships outside the upstream release feed: no update provider,
         // so a build can never install Meeting Media Manager over itself.
         publish: null,
         win: {

@@ -14,10 +14,11 @@ export const APP_ID = import.meta.env.APP_ID;
 export const APP_NAME = import.meta.env.APP_NAME;
 export const PRODUCT_NAME = import.meta.env.PRODUCT_NAME;
 
-// TM2 has no update channel of its own. The inherited updater feed points at
-// Meeting Media Manager's releases, so leaving it on would download and
-// install MMM over TM2.
-export const UPDATES_DISABLED = !!PRODUCT_NAME?.startsWith('TM2');
+// GR Media has no update channel of its own. The inherited updater feed points
+// at Meeting Media Manager's releases, so leaving it on would download and
+// install Meeting Media Manager over GR Media.
+export const UPDATES_DISABLED =
+  !!PRODUCT_NAME && PRODUCT_NAME !== 'Meeting Media Manager';
 
 // Sentry
 const getSentryEnvironment = () => {

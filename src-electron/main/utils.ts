@@ -122,14 +122,17 @@ export async function getSharedDataPath(): Promise<null | string> {
   if (PLATFORM === 'win32') {
     sharedPath = join(
       process.env.ProgramData || String.raw`C:\ProgramData`, // NOSONAR: '' means not set
-      PRODUCT_NAME || 'TM2',
+      PRODUCT_NAME || 'GR Media',
     );
   } else if (PLATFORM === 'darwin') {
-    sharedPath = join('/Library/Application Support', PRODUCT_NAME || 'TM2');
+    sharedPath = join(
+      '/Library/Application Support',
+      PRODUCT_NAME || 'GR Media',
+    );
   } else {
     sharedPath = join(
       '/var/cache',
-      (PRODUCT_NAME || 'tm2').toLowerCase().replaceAll(' ', '-'),
+      (PRODUCT_NAME || 'gr-media').toLowerCase().replaceAll(' ', '-'),
     );
   }
 

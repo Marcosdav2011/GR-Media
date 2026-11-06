@@ -323,21 +323,23 @@ describe('DialogZoomSetupAssistant', () => {
     await click("Yes, it's on"); // camera
     await click('Continue');
 
-    expect(text()).toContain("TM2 couldn't join computer audio");
+    expect(text()).toContain("GR Media couldn't join computer audio");
     expect(text()).not.toContain('Is your microphone on');
 
     await click('Try again');
     expect(text()).toContain('Is your microphone on');
   });
 
-  it("asks whether computer audio is joined when TM2 can't tell, and learns the microphone on that word", async () => {
+  it("asks whether computer audio is joined when GR Media can't tell, and learns the microphone on that word", async () => {
     zoom.joinZoomAudioForSetup.mockResolvedValueOnce('unknown');
     await mountAssistant();
     await reachVideoStep();
     await click("Yes, it's on"); // camera
     await click('Continue');
 
-    expect(text()).toContain("TM2 can't tell whether computer audio is joined");
+    expect(text()).toContain(
+      "GR Media can't tell whether computer audio is joined",
+    );
     expect(text()).not.toContain('Is your microphone on');
 
     await click('Computer audio is joined');
@@ -365,7 +367,7 @@ describe('DialogZoomSetupAssistant', () => {
     expect(isDisabled(button('Continue'))).toBe(false);
   });
 
-  it("lets the user pick the Participants entry when TM2 can't find Zoom's Participants button", async () => {
+  it("lets the user pick the Participants entry when GR Media can't find Zoom's Participants button", async () => {
     zoom.diagnoseZoom.mockResolvedValue({
       ...ALL_GOOD,
       hostControls: false,
@@ -418,7 +420,7 @@ describe('DialogZoomSetupAssistant', () => {
     expect(text()).not.toContain('Which of these opens the participants list');
   });
 
-  it('lets the host point out the "Mute all" button when TM2 doesn\'t recognize it', async () => {
+  it('lets the host point out the "Mute all" button when GR Media doesn\'t recognize it', async () => {
     zoom.diagnoseZoom.mockResolvedValue({
       ...ALL_GOOD,
       hostControls: false,
@@ -526,7 +528,7 @@ describe('DialogZoomSetupAssistant', () => {
     );
   });
 
-  it("lets the user pick the React entry when TM2 can't find Zoom's React button", async () => {
+  it("lets the user pick the React entry when GR Media can't find Zoom's React button", async () => {
     zoom.learnZoomHandRaisedPhrase
       .mockResolvedValueOnce({ error: 'react-button-not-found', ok: false })
       .mockResolvedValueOnce({ error: 'react-button-not-found', ok: false })
@@ -548,7 +550,9 @@ describe('DialogZoomSetupAssistant', () => {
     await click('Raise and lower my hand');
     expect(zoom.learnZoomHandRaisedPhrase).toHaveBeenLastCalledWith(undefined);
     // Asking is expected, not reported as an error.
-    expect(text()).toContain('TM2 needs your help to find its React button');
+    expect(text()).toContain(
+      'GR Media needs your help to find its React button',
+    );
     expect(text()).not.toContain("That didn't open Zoom's reactions");
     expect(text()).toContain("Which of these opens Zoom's reactions?");
     // React is asked for once Zoom has moved it into "More": listed first.
@@ -604,8 +608,8 @@ describe('DialogZoomSetupAssistant', () => {
 
     await click('Check sharing');
     expect(zoom.testZoomShareEntry).toHaveBeenCalledWith(null);
-    // TM2's own guess failing is expected, not reported as an error.
-    expect(text()).toContain('TM2 needs your help to find the one');
+    // GR Media's own guess failing is expected, not reported as an error.
+    expect(text()).toContain('GR Media needs your help to find the one');
     expect(text()).not.toContain("That didn't open Zoom's share window");
     expect(text()).toContain('Which of these starts screen sharing');
     expect(text()).toContain("In Zoom's toolbar");
@@ -657,10 +661,10 @@ describe('DialogZoomSetupAssistant', () => {
     expect(zoom.getZoomShareEntries).not.toHaveBeenCalled();
     expect(text()).not.toContain('Which of these starts screen sharing');
 
-    // Listed, but something in front of Zoom's share window kept TM2 from
+    // Listed, but something in front of Zoom's share window kept GR Media from
     // selecting it: sharing would not pick it either.
     await click('Check sharing');
-    expect(text()).toContain("TM2 couldn't select it");
+    expect(text()).toContain("GR Media couldn't select it");
 
     await click('Check sharing');
     expect(text()).toContain('offers the output window');
@@ -817,6 +821,6 @@ describe('DialogZoomSetupAssistant', () => {
     await click('Skip'); // raised hands
     expect(text()).toContain('Sharing the output window');
     await click('Skip'); // sharing
-    expect(text()).toContain('What should TM2 do?');
+    expect(text()).toContain('What should GR Media do?');
   });
 });

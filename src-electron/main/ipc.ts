@@ -61,6 +61,7 @@ import {
   watchFolder,
 } from 'src-electron/main/fs';
 import { convertHeic } from 'src-electron/main/heic';
+import { getMonitorPreviews } from 'src-electron/main/monitor-previews';
 import { openFolder } from 'src-electron/main/open-folder';
 import { exportHtmlToPdf } from 'src-electron/main/pdf';
 import { getAllScreens } from 'src-electron/main/screen';
@@ -547,6 +548,7 @@ handleIpcInvoke('getMediaWindowCaptureSourceId', (e) => {
 // The media window's size in device pixels: the most a capture of it should
 // ask for. A capture asking for more makes Chromium render the media window
 // itself at up to twice its size for as long as the capture runs.
+handleIpcInvoke('getMonitorPreviews', () => getMonitorPreviews());
 handleIpcInvoke('getMediaWindowCaptureSize', () => {
   const media = mediaWindowInfo.mediaWindow;
   if (!media || media.isDestroyed()) return null;

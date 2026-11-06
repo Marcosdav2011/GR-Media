@@ -55,7 +55,7 @@ export function createAuxiliaryWindow() {
     roundedCorners: PLATFORM === 'darwin',
     skipTaskbar: true,
     thickFrame: false,
-    title: 'TM2 Output',
+    title: 'GR Media Output',
     webPreferences: {
       additionalArguments: ['--output-role=auxiliary'],
     },

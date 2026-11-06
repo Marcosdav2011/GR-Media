@@ -57,6 +57,18 @@
     <section class="teo-panel">
       <div class="teo-panel__header">
         <div>
+          <div class="teo-panel__title">{{ t('teo-monitors-title') }}</div>
+          <div class="teo-panel__hint">{{ t('teo-monitors-hint') }}</div>
+        </div>
+      </div>
+      <div class="teo-cameras__panel-body">
+        <MonitorPreviews />
+      </div>
+    </section>
+
+    <section class="teo-panel">
+      <div class="teo-panel__header">
+        <div>
           <div class="teo-panel__title">{{ t('teo-camera-control') }}</div>
           <div class="teo-panel__hint">{{ t('teo-camera-output-hint') }}</div>
         </div>
@@ -70,6 +82,7 @@
 
 <script setup lang="ts">
 import CameraPanel from 'src/components/CameraPanel.vue';
+import MonitorPreviews from 'src/components/MonitorPreviews.vue';
 import { useTeoPlaybackTest } from 'src/composables/useTeoPlaybackTest';
 import { useTeoScreens } from 'src/composables/useTeoScreens';
 import { useCurrentStateStore } from 'src/stores/current-state';

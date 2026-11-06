@@ -178,7 +178,7 @@ import { useRoute, useRouter } from 'vue-router';
 const yeartextWatcherPaused = ref(false);
 
 useMeta({
-  titleTemplate: (title) => (title ? `${title} · TM2` : 'TM2'),
+  titleTemplate: (title) => (title ? `${title} · GR Media` : 'GR Media'),
 });
 
 // Icon mapping

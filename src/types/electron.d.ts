@@ -219,6 +219,8 @@ export interface ElectronApi {
    * time. Null if there's no media window (or it's been destroyed).
    */
   getMediaWindowCaptureSourceId: () => Promise<null | string>;
+  /** Still frames of the app's own output windows, for the monitors panel. */
+  getMonitorPreviews: () => Promise<MonitorPreview[]>;
   getScreenAccessStatus: () => Promise<MediaAccessStatus>;
   getSharedDataPath: () => Promise<null | string>;
   /**
@@ -578,6 +580,7 @@ export type ElectronIpcInvokeKey =
   | 'getLowDiskSpaceStatus'
   | 'getMediaWindowCaptureSize'
   | 'getMediaWindowCaptureSourceId'
+  | 'getMonitorPreviews'
   | 'getScreenAccessStatus'
   | 'getSharedDataPath'
   | 'getUpdaterState'
@@ -720,6 +723,20 @@ export interface MacosFolderPermissionResult {
 
 export type MediaAccessStatus =
   'denied' | 'granted' | 'not-determined' | 'restricted' | 'unknown';
+
+/** A still frame of one output window, refreshed by the monitors panel. */
+export interface MonitorPreview {
+  /** Physical monitor number, or null while the window is not on screen. */
+  displayNumber: null | number;
+  /** JPEG data URL, or empty when there was nothing to capture. */
+  image: string;
+  /** Whether the window exists and is visible. */
+  live: boolean;
+  role: MonitorPreviewRole;
+}
+
+/** GR Media's own output windows, as shown in the monitors panel. */
+export type MonitorPreviewRole = 'auxiliary' | 'main' | 'timer' | 'website';
 
 export type NavigateWebsiteAction = 'back' | 'forward' | 'refresh';
 

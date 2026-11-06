@@ -190,7 +190,7 @@
     />
 
     <div v-if="screenIdentifyText" class="screen-identify-layer">
-      <div class="screen-identify-brand">TM2</div>
+      <div class="screen-identify-brand">GR Media</div>
       <div class="screen-identify-label">{{ screenIdentifyText }}</div>
     </div>
   </q-page-container>

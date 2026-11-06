@@ -90,6 +90,7 @@ export const electronApi: ElectronApi = {
   getMediaWindowCaptureSourceId: function () {
     throw new Error('Function not implemented.');
   },
+  getMonitorPreviews: async () => [],
   getScreenAccessStatus: function () {
     throw new Error('Function not implemented.');
   },

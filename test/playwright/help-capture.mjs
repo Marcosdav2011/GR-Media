@@ -8,7 +8,7 @@ const ELECTRON_MAIN_PATH = fileURLToPath(
 );
 
 const OUT = 'test/playwright/help-shots';
-const MEDIA_DIR = 'D:/TM2-help-shots/media';
+const MEDIA_DIR = 'D:/GRMedia-help-shots/media';
 const DEMO_VIDEO = fileURLToPath(
   new URL('../../public/demo/teo-demo-video.mp4', import.meta.url),
 );
@@ -58,9 +58,9 @@ for (const [title, hue] of Object.entries(IMAGE_HUES)) {
   );
   const fileName = title.toLowerCase().replaceAll(' ', '-') + '.png';
   await sharp(svg).png().toFile(`${MEDIA_DIR}/${fileName}`);
-  imageUrls.set(title, `file:///D:/TM2-help-shots/media/${fileName}`);
+  imageUrls.set(title, `file:///D:/GRMedia-help-shots/media/${fileName}`);
 }
-const videoUrl = 'file:///D:/TM2-help-shots/media/demo-video.mp4';
+const videoUrl = 'file:///D:/GRMedia-help-shots/media/demo-video.mp4';
 
 const app = await electron.launch({
   args: [
@@ -73,7 +73,7 @@ const app = await electron.launch({
   env: {
     ...process.env,
     M3_DEMO_MODE: '1',
-    PORTABLE_EXECUTABLE_DIR: 'D:/TM2-help-shots',
+    PORTABLE_EXECUTABLE_DIR: 'D:/GRMedia-help-shots',
   },
 });
 app.process().stdout?.on('data', (d) => {
@@ -99,6 +99,18 @@ async function findMainWindow() {
 }
 
 const window = await findMainWindow();
+
+// Screenshots in the manual are documented at 1920x1009. The demo profile
+// remembers the window size between runs, so pin it to keep the shots (and
+// the studio's three-column layout) consistent.
+await app.evaluate(({ BrowserWindow }) => {
+  const mainWindow = BrowserWindow.getAllWindows().find((candidate) =>
+    candidate.webContents.getURL().includes('#/media-calendar'),
+  );
+  mainWindow?.setContentSize(1920, 1009);
+  mainWindow?.center();
+});
+await window.waitForTimeout(1500);
 
 await window.waitForFunction(
   () => document.body.innerText.includes('Sample TGW song'),
@@ -192,6 +204,43 @@ await window.waitForTimeout(1200);
 await clearNotifications();
 await window.locator('#q-app').screenshot({ path: `${OUT}/02-camaras.png` });
 console.log('captured cameras top');
+
+const monitorsPanel = window.locator('.teo-monitors');
+if ((await monitorsPanel.count()) > 0) {
+  const testOutput = window.getByRole('button', { name: /Probar salida/ });
+  const startedTest =
+    (await testOutput.count()) > 0 && (await testOutput.first().isEnabled());
+  if (startedTest) {
+    await testOutput.first().click();
+    await window.waitForTimeout(3000);
+  }
+  await window.waitForTimeout(1500);
+  await monitorsPanel.first().screenshot({
+    path: `${OUT}/09-monitores.png`,
+  });
+  console.log('captured monitors');
+  if (startedTest) {
+    await window.getByRole('button', { name: /Detener prueba/ }).click();
+    await window.waitForTimeout(1200);
+  }
+}
+
+const studioToggle = window.locator('.teo-studio-toggle .q-toggle');
+if ((await studioToggle.count()) > 0) {
+  await studioToggle.first().click();
+  await window.waitForTimeout(2500);
+  await window.evaluate(() => {
+    const scroll = document.querySelector('.app-main-scroll');
+    if (scroll) scroll.scrollTop = 0;
+  });
+  await window.waitForTimeout(800);
+  await window.locator('.teo-camera-panel').screenshot({
+    path: `${OUT}/08-estudio.png`,
+  });
+  console.log('captured studio mode');
+  await studioToggle.first().click();
+  await window.waitForTimeout(1500);
+}
 
 await window.evaluate(() => {
   const scroll = document.querySelector('.app-main-scroll');

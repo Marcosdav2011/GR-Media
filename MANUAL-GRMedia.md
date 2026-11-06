@@ -1,19 +1,19 @@
-# Manual de TM2
+# Manual de GR Media
 
 **Versión descrita:** 26.10.2-beta.5  
-**Fecha:** 30 de octubre de 2026  
-**Tipo de documento:** manual integrado en la pestaña **Ayuda** de TM2 (con capturas de pantalla) y disponible como PDF en `MANUAL-TM2.pdf`.
+**Fecha:** 6 de noviembre de 2026  
+**Tipo de documento:** manual integrado en la pestaña **Ayuda** de GR Media (con capturas de pantalla) y disponible como PDF en `MANUAL-GRMedia.pdf`.
 
-Este manual explica cómo funciona TM2 tal como está hoy: la ventana principal, las
+Este manual explica cómo funciona GR Media tal como está hoy: la ventana principal, las
 pantallas de salida, la página de la reunión, las cámaras, la captura de ventanas,
 el cronómetro con su monitor del orador y los ajustes que más se usan en el Salón
 del Reino.
 
 ---
 
-## 1. Qué es TM2
+## 1. Qué es GR Media
 
-TM2 es una aplicación de escritorio para Windows que ayuda a presentar la reunión:
+GR Media es una aplicación de escritorio para Windows que ayuda a presentar la reunión:
 
 - Descarga y organiza los archivos multimedia de la reunión (videos, imágenes,
   canciones, PDF) para la fecha y el idioma de la congregación.
@@ -33,43 +33,43 @@ en las **pantallas de salida**.
 
 ## 2. Instalación y datos
 
-TM2 se entrega de dos formas:
+GR Media se entrega de dos formas:
 
-| Formato    | Archivo                           | Cómo se usa                                                               |
-| ---------- | --------------------------------- | ------------------------------------------------------------------------- |
-| Portable   | `TM2-26.10.2-beta.5-portable.exe` | Se ejecuta directamente, sin instalar. Ideal para probar o llevar en USB. |
-| Instalador | `TM2-26.10.2-beta.5-x64.exe`      | Se instala en el equipo y crea accesos directos.                          |
+| Formato    | Archivo                                | Cómo se usa                                                               |
+| ---------- | -------------------------------------- | ------------------------------------------------------------------------- |
+| Portable   | `GR Media-26.10.2-beta.5-portable.exe` | Se ejecuta directamente, sin instalar. Ideal para probar o llevar en USB. |
+| Instalador | `GR Media-26.10.2-beta.5-x64.exe`      | Se instala en el equipo y crea accesos directos.                          |
 
 ### Dónde se guardan los datos
 
 **Versión portable:** junto al `.exe` se crean estas carpetas:
 
-- `TM2 - User Data` → perfiles, ajustes, caché de multimedia y datos de la
+- `GR Media - User Data` → perfiles, ajustes, caché de multimedia y datos de la
   congregación.
-- `TM2 - Temporary Files` → archivos temporales.
+- `GR Media - Temporary Files` → archivos temporales.
 
-**Versión instalada:** los datos están en `%APPDATA%\TM2`.
+**Versión instalada:** los datos están en `%APPDATA%\GR Media`.
 
 > Para hacer una copia de seguridad de la versión portable, copia la carpeta
-> `TM2 - User Data`. No hace falta copiar el `.exe`.
+> `GR Media - User Data`. No hace falta copiar el `.exe`.
 
-### Cosas importantes al abrir TM2
+### Cosas importantes al abrir GR Media
 
-- **Solo puede haber una instancia abierta.** Si se abre TM2 dos veces, la segunda
+- **Solo puede haber una instancia abierta.** Si se abre GR Media dos veces, la segunda
   se cierra sola. Cierra la que esté abierta antes de abrir otra.
 - La versión **portable no se actualiza sola**. Para actualizar, descarga la nueva
   versión y usa la misma carpeta de datos.
 - La versión **instalada** sí puede buscar actualizaciones desde Ajustes.
 - Si Windows pregunta por permisos de cámara, micrófono o firewall, acepta para
-  que TM2 pueda usar las funciones correspondientes.
+  que GR Media pueda usar las funciones correspondientes.
 
 ---
 
 ## 3. La ventana principal
 
-Arriba está la cabecera de TM2:
+Arriba está la cabecera de GR Media:
 
-- **Logo TM2:** abre el cuadro «Acerca de».
+- **Logo GR Media:** abre el cuadro «Acerca de».
 - **Perfil de la congregación:** muestra el nombre del perfil activo. Al pulsarlo
   se cambia de perfil, se crea uno nuevo o se exportan los ajustes de un perfil.
 - **Pantalla de salida:** indica la pantalla externa que se está usando y permite
@@ -102,7 +102,7 @@ accesos rápidos:
 
 ## 4. Pantallas de salida
 
-TM2 usa una **pantalla multimedia principal** y, si hay una segunda pantalla
+GR Media usa una **pantalla multimedia principal** y, si hay una segunda pantalla
 externa conectada, una **segunda salida**.
 
 - **Multimedia y texto del año** se muestran en la pantalla multimedia y se
@@ -142,16 +142,16 @@ Es la página principal para preparar y presentar la reunión.
 
 ### Elegir la fecha
 
-En el calendario lateral se elige el día. TM2 muestra las secciones de esa reunión
+En el calendario lateral se elige el día. GR Media muestra las secciones de esa reunión
 (partes de entre semana y de fin de semana) con sus archivos.
 
 ### Descargar los archivos
 
-Al abrir una fecha, TM2 descarga automáticamente el multimedia que falte. El estado
+Al abrir una fecha, GR Media descarga automáticamente el multimedia que falte. El estado
 se ve en la isla de acciones → **Descargas**.
 
 - Si falta un archivo, el propio elemento ofrece volver a descargarlo o localizarlo.
-- Si no hay conexión, TM2 lo avisa y mantiene lo que ya estaba descargado.
+- Si no hay conexión, GR Media lo avisa y mantiene lo que ya estaba descargado.
 
 ### Añadir archivos propios
 
@@ -203,7 +203,25 @@ actual. El fondo personalizado, si está configurado, se muestra en la misma cap
 ## 6. Cámaras y pantallas
 
 Abre la pestaña **Cámaras**. Esta página se llama **Cámaras y pantallas** y tiene
-tres bloques: control de la cámara, captura de ventanas y escenas.
+cuatro bloques: monitores, control de la cámara, captura de ventanas y escenas.
+Además, el **Modo estudio** añade una previa y un programa para comprobar la imagen
+antes de mostrarla a la audiencia.
+
+### Monitores
+
+El bloque **Monitores**, al principio de la página, muestra lo que está viendo cada
+salida en este momento:
+
+- **Salida principal**: la ventana que presenta multimedia y cámara.
+- **Segunda salida**: la ventana que replica la salida principal en la otra pantalla.
+- **Monitor del orador**: la ventana del temporizador.
+- **Sitio web**: la ventana de presentación de un sitio.
+
+Cada recuadro indica la pantalla física en la que está (Pantalla 2, Pantalla 3…) y
+muestra una imagen actualizada cada segundo, sin pedir permiso de grabación de
+pantalla ni abrir transmisiones adicionales. Si una ventana está cerrada u oculta,
+el recuadro dice **Sin mostrar** en lugar de dejar una imagen antigua. El bloque se
+pausa mientras la ventana principal está minimizada.
 
 ### Control de la cámara
 
@@ -240,7 +258,32 @@ Una escena guarda la cámara, la disposición, el zoom y el encuadre:
    o **eliminarla**.
 
 Las escenas también están disponibles en la isla de acciones → **Escenas de cámara**.
-Si la cámara de una escena no está conectada, TM2 lo avisa.
+Si la cámara de una escena no está conectada, GR Media lo avisa.
+
+### Modo estudio (previa y programa)
+
+Activa **Modo estudio** con el interruptor del principio de la página. Aparecen dos
+monitores:
+
+- **Previa (PVW)**: lo que estás preparando.
+- **Programa (PGM)**: lo que ve la audiencia en la pantalla de salida.
+
+Mientras el modo estudio está activo:
+
+1. Elige cámara, disposición, zoom y encuadre. Los cambios se ven en la previa y
+   no llegan a la pantalla de salida.
+2. Para preparar una captura de ventana, elige la ventana y la pantalla, y pulsa
+   **Cargar en la vista previa**. La captura se ve en la previa antes de mostrarla.
+3. Pulsa **Al aire** para enviar la previa a la pantalla de salida. La cámara o la
+   captura pasa al monitor de programa.
+4. Pulsa **Cortar** para quitar de la pantalla lo que está al aire y volver a la
+   pantalla de multimedia.
+5. Al pulsar el botón de reproducción de una escena, la escena se carga en la
+   previa; todavía no sale al aire hasta que pulses **Al aire**.
+
+Si la misma cámara que está al aire es también la de la previa, la previa se pausa
+mientras dure la emisión. Si lo que está al aire es una captura, la previa de la
+cámara sigue disponible.
 
 ### Captura de ventanas y pantallas
 
@@ -255,17 +298,18 @@ una videollamada):
 
 Mientras la captura está activa, la cámara y la pantalla de multimedia se pausan.
 Si la ventana compartida se cierra o se desconecta su pantalla, la captura se
-detiene y TM2 lo avisa.
+detiene y GR Media lo avisa. En modo estudio, la captura se carga primero en la
+previa y sale a la pantalla al pulsar **Al aire**.
 
-> No elijas como origen la propia salida de TM2 ni su segunda salida: la imagen se
-> reflejaría en bucle. TM2 muestra un aviso si lo intentas.
+> No elijas como origen la propia salida de GR Media ni su segunda salida: la imagen se
+> reflejaría en bucle. GR Media muestra un aviso si lo intentas.
 
 ### Modo solo cámaras
 
 En Ajustes → General puedes activar **Modo solo cámaras (sin multimedia de reunión)**.
 Al hacerlo:
 
-- TM2 abre directamente la página Cámaras.
+- GR Media abre directamente la página Cámaras.
 - Se ocultan Reunión, las descargas y Sitio web.
 - Cámaras, pantallas de salida y Ajustes siguen disponibles.
 
@@ -278,8 +322,8 @@ Si la cámara no aparece o no se abre:
 1. Comprueba que otra aplicación no la esté usando (Zoom, Teams, OBS…).
 2. En Windows, revisa **Configuración → Privacidad → Cámara** y permite el acceso
    a las aplicaciones de escritorio.
-3. Vuelve a TM2 y pulsa **Detectar cámaras**.
-4. Si sigue sin funcionar, reinicia TM2.
+3. Vuelve a GR Media y pulsa **Detectar cámaras**.
+4. Si sigue sin funcionar, reinicia GR Media.
 
 ---
 
@@ -325,7 +369,7 @@ Para que el orador vea el cronómetro en una tableta o teléfono:
 5. La tableta muestra la misma pantalla del cronómetro, con el aviso y el reloj.
 
 Si el control remoto no arranca, comprueba el puerto (puede estar ocupado por otro
-programa) y permite TM2 en el firewall de Windows.
+programa) y permite GR Media en el firewall de Windows.
 
 ---
 
@@ -338,7 +382,7 @@ audiencia.
 - **Empezar duplicación** refleja la navegación en la salida.
 - **Detener duplicación** la corta.
 
-Es útil para mostrar artículos o videos del sitio sin salir de TM2.
+Es útil para mostrar artículos o videos del sitio sin salir de GR Media.
 
 ---
 
@@ -386,7 +430,7 @@ Cada perfil guarda su propia congregación, idioma, horario, carpetas y ajustes.
 
 Antes de la reunión:
 
-1. Abre TM2 y comprueba que el perfil correcto está activo.
+1. Abre GR Media y comprueba que el perfil correcto está activo.
 2. Conecta el proyector y la segunda pantalla, si se usa.
 3. Abre **Pantalla de salida**, asigna las pantallas y pulsa **Identificar pantalla**.
 4. En **Cámaras**, elige la cámara, la disposición y el encuadre; guarda o activa la
@@ -413,7 +457,7 @@ Después de la reunión:
 1. Detén la reproducción y la cámara.
 2. Detén la grabación si estaba activa.
 3. Exporta el informe del cronómetro si se necesita.
-4. Cierra TM2 con el botón de cerrar de la ventana.
+4. Cierra GR Media con el botón de cerrar de la ventana.
 
 ---
 
@@ -438,7 +482,7 @@ la página Reunión lleva directamente a ese ajuste.
 
 - Puede estar en uso por otra aplicación. Ciérrala o elige otra cámara.
 - Revisa los permisos de cámara de Windows.
-- Pulsa **Detectar cámaras** y, si hace falta, reinicia TM2.
+- Pulsa **Detectar cámaras** y, si hace falta, reinicia GR Media.
 
 ### La captura se detuvo
 
@@ -447,7 +491,7 @@ elige otra ventana o pantalla y vuelve a iniciar la captura.
 
 ### La imagen se repite en bucle al capturar
 
-Estás capturando la propia salida de TM2 o su segunda salida. Elige otra ventana u
+Estás capturando la propia salida de GR Media o su segunda salida. Elige otra ventana u
 otra pantalla.
 
 ### No se detecta la segunda pantalla
@@ -460,7 +504,7 @@ otra pantalla.
 
 - La computadora y la tableta deben estar en la misma red.
 - Comprueba el puerto en Ajustes; si está ocupado, elige otro.
-- Permite TM2 en el firewall de Windows.
+- Permite GR Media en el firewall de Windows.
 - Usa la dirección que muestra el panel del cronómetro, no una inventada.
 
 ### No puedo cambiar de página ni de perfil
@@ -470,33 +514,33 @@ Hay multimedia reproduciéndose. Pulsa **Detener** primero.
 ### Un archivo multimedia falta
 
 En el propio elemento, usa **Localizar archivo multimedia** para volver a vincularlo,
-o elimínalo y vuelve a añadirlo. Si es multimedia de JW.org, TM2 intentará
+o elimínalo y vuelve a añadirlo. Si es multimedia de JW.org, GR Media intentará
 descargarlo de nuevo.
 
 ### La ventana de multimedia se cerró o se reinició
 
-TM2 intenta recuperarla automáticamente. Si se repite, reinicia TM2. Como último
+GR Media intenta recuperarla automáticamente. Si se repite, reinicia GR Media. Como último
 recurso, en Ajustes → Avanzado puedes probar a desactivar la aceleración por
 hardware.
 
 ### La versión portable no se actualiza
 
 Es normal: la versión portable no usa el actualizador. Descarga la nueva versión y
-conserva la carpeta `TM2 - User Data`.
+conserva la carpeta `GR Media - User Data`.
 
 ### Windows o el antivirus bloquean funciones
 
-Puede ocurrir con el asistente de Zoom o con la captura de pantalla. Permite TM2 en
+Puede ocurrir con el asistente de Zoom o con la captura de pantalla. Permite GR Media en
 el antivirus y vuelve a intentarlo. Si faltan archivos del asistente de Zoom,
-reinstalar TM2 debería restaurarlos.
+reinstalar GR Media debería restaurarlos.
 
 ---
 
 ## 12. Resumen de rutas y nombres
 
-- Carpeta de datos portable: `TM2 - User Data`, junto al ejecutable.
-- Carpeta temporal portable: `TM2 - Temporary Files`, junto al ejecutable.
-- Carpeta de datos instalada: `%APPDATA%\TM2`.
+- Carpeta de datos portable: `GR Media - User Data`, junto al ejecutable.
+- Carpeta temporal portable: `GR Media - Temporary Files`, junto al ejecutable.
+- Carpeta de datos instalada: `%APPDATA%\GR Media`.
 - Ajuste de reproducción: **Archivos multimedia y reproducción → Activar
   reproducción de archivos multimedia**.
 - Pantallas: cabecera → **Pantalla de salida**.

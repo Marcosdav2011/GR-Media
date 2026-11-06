@@ -3,7 +3,7 @@ import type { TeoCameraLayout, TeoCameraView } from 'src/types';
 import { errorCatcher } from 'src/helpers/error-catcher';
 
 /**
- * TEO MEDIA output channels.
+ * GR MEDIA output channels.
  *
  * TEO owns the camera output, so it uses its own channel instead of MMM's
  * `camera-stream`. MMM publishes a display camera there automatically

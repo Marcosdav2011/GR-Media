@@ -186,6 +186,54 @@ describe('teo-camera store', () => {
     expect(postTeoCamera).toHaveBeenCalledWith('camera-1');
   });
 
+  it('loads a saved scene into the preview without going on air', () => {
+    const store = useTeoCameraStore();
+    store.selectedCameraId = 'camera-1';
+    store.selectedCameraLabel = 'USB Camera';
+    store.selectedLayout = 'split';
+    store.setCameraView({ panX: 4, panY: -2, zoom: 2 });
+    const scene = store.addScene('Pulpit');
+    if (!scene) throw new Error('scene was not saved');
+
+    store.selectedCameraId = 'camera-2';
+    store.selectedCameraLabel = 'HDMI Camera';
+    store.selectedLayout = 'fullscreen';
+    store.setCameraView({ panX: 0, panY: 0, zoom: 1 });
+    vi.clearAllMocks();
+
+    expect(store.loadSceneIntoPreview(scene.id)).toBe(true);
+
+    expect(store.selectedCameraId).toBe('camera-1');
+    expect(store.selectedCameraLabel).toBe('USB Camera');
+    expect(store.selectedLayout).toBe('split');
+    expect(store.view).toEqual({ panX: 4, panY: -2, zoom: 2 });
+    expect(store.activeCameraId).toBeNull();
+    expect(postTeoCamera).not.toHaveBeenCalled();
+    expect(postTeoCameraLayout).not.toHaveBeenCalled();
+    expect(postTeoCameraView).not.toHaveBeenCalled();
+  });
+
+  it('rejects loading a scene that no longer exists', () => {
+    const store = useTeoCameraStore();
+
+    expect(store.loadSceneIntoPreview('missing-scene')).toBe(false);
+  });
+
+  it('keeps studio changes in the preview until they go on air', () => {
+    const store = useTeoCameraStore();
+    store.studioMode = true;
+    store.startCameraProjection('camera-1', 'USB Camera', 2, 'fullscreen');
+    vi.clearAllMocks();
+
+    store.setSelectedLayout('pip');
+    store.setCameraView({ panX: 10, panY: 0, zoom: 2 });
+
+    expect(store.selectedLayout).toBe('pip');
+    expect(store.view).toEqual({ panX: 10, panY: 0, zoom: 2 });
+    expect(postTeoCameraLayout).not.toHaveBeenCalled();
+    expect(postTeoCameraView).not.toHaveBeenCalled();
+  });
+
   it('changes the layout of a running camera without reopening it', () => {
     const store = useTeoCameraStore();
     store.startCameraProjection('camera-1', 'USB Camera', 2, 'fullscreen');

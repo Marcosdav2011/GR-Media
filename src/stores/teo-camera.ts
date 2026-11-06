@@ -28,6 +28,7 @@ interface Store {
   selectedCameraId: null | string;
   selectedCameraLabel: string;
   selectedLayout: TeoCameraLayout;
+  studioMode: boolean;
   view: TeoCameraView;
 }
 
@@ -68,6 +69,21 @@ export const useTeoCameraStore = defineStore('teo-camera', {
       };
       this.scenes.push(scene);
       return scene;
+    },
+
+    /**
+     * Loads a saved setup into the preview without going on air, so the
+     * operator can check it before taking it live.
+     */
+    loadSceneIntoPreview(id: string): boolean {
+      const scene = this.scenes.find((candidate) => candidate.id === id);
+      if (!scene) return false;
+
+      this.selectedCameraId = scene.cameraId;
+      this.selectedCameraLabel = scene.cameraLabel;
+      this.selectedLayout = scene.layout;
+      this.view = normalizeTeoCameraView(scene.view);
+      return true;
     },
 
     removeScene(id: string) {
@@ -113,7 +129,9 @@ export const useTeoCameraStore = defineStore('teo-camera', {
       const nextView = normalizeTeoCameraView(view);
       if (teoCameraViewsEqual(nextView, this.view)) return;
       this.view = nextView;
-      if (!this.activeCameraId) return;
+      // In studio mode the preview is prepared first; framing changes must not
+      // reach the audience until the operator takes it on air.
+      if (!this.activeCameraId || this.studioMode) return;
       this.activeSceneId = null;
       try {
         postTeoCameraView(nextView);
@@ -128,7 +146,7 @@ export const useTeoCameraStore = defineStore('teo-camera', {
     setSelectedLayout(layout: TeoCameraLayout) {
       if (this.selectedLayout === layout) return;
       this.selectedLayout = layout;
-      if (!this.activeCameraId) return;
+      if (!this.activeCameraId || this.studioMode) return;
       // The running output no longer matches the scene that started it.
       this.activeSceneId = null;
       try {
@@ -252,6 +270,7 @@ export const useTeoCameraStore = defineStore('teo-camera', {
       'selectedCameraId',
       'selectedCameraLabel',
       'selectedLayout',
+      'studioMode',
       'view',
     ],
   },
@@ -266,6 +285,7 @@ export const useTeoCameraStore = defineStore('teo-camera', {
     selectedCameraId: null,
     selectedCameraLabel: '',
     selectedLayout: 'fullscreen',
+    studioMode: false,
     view: { ...IDENTITY_TEO_CAMERA_VIEW },
   }),
 });

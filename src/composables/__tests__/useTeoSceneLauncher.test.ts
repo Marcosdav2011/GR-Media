@@ -124,6 +124,39 @@ describe('useTeoSceneLauncher', () => {
     expect(postTeoCameraView).toHaveBeenCalled();
   });
 
+  it('prepares a scene in the preview without starting it', async () => {
+    const scene = createScene('split');
+    enumerateDevicesMock.mockResolvedValue([
+      camera('new-camera-id', 'USB Camera'),
+    ]);
+    const { launcher } = await mountLauncher();
+
+    await expect(launcher.prepareScene(scene)).resolves.toEqual({
+      deviceId: 'new-camera-id',
+      label: 'USB Camera',
+    });
+
+    const store = useTeoCameraStore();
+    expect(store.selectedCameraId).toBe('new-camera-id');
+    expect(store.selectedLayout).toBe('split');
+    expect(store.activeCameraId).toBeNull();
+    expect(postTeoCamera).not.toHaveBeenCalled();
+  });
+
+  it('warns when the scene camera is missing while preparing', async () => {
+    const scene = createScene('split');
+    enumerateDevicesMock.mockResolvedValue([
+      camera('other-camera', 'Other Camera'),
+    ]);
+    const { launcher } = await mountLauncher();
+
+    await expect(launcher.prepareScene(scene)).resolves.toBeNull();
+
+    expect(createTemporaryNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'warning' }),
+    );
+  });
+
   it('refuses to start a scene while media is playing', async () => {
     const scene = createScene('pip');
     useCurrentStateStore().mediaPlaying.url = 'file:///media/video.mp4';

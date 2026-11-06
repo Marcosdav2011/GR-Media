@@ -49,7 +49,7 @@ export function createTimerWindow() {
     opacity: 1,
     roundedCorners: PLATFORM === 'darwin',
     thickFrame: false,
-    title: 'Timer - TM2',
+    title: 'Timer - GR Media',
     width: HD_RESOLUTION[0],
   });
 

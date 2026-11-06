@@ -50,10 +50,10 @@
         <section id="que-es" class="help-section">
           <header class="help-section__header">
             <q-icon class="help-section__icon" name="mmm-guide" />
-            <h2>1. Qué es TM2</h2>
+            <h2>1. Qué es GR Media</h2>
           </header>
           <p>
-            TM2 es una aplicación de escritorio para Windows que ayuda a
+            GR Media es una aplicación de escritorio para Windows que ayuda a
             presentar la reunión. Todo se controla desde la
             <strong>ventana principal</strong>; lo que ve la audiencia se
             muestra en las <strong>pantallas de salida</strong>.
@@ -120,28 +120,28 @@
           <ul class="help-list">
             <li>
               <strong>Versión portable:</strong> junto al <code>.exe</code> se
-              crean <code>TM2 - User Data</code> (perfiles, ajustes, caché y
-              datos de la congregación) y
-              <code>TM2 - Temporary Files</code> (archivos temporales).
+              crean <code>GR Media - User Data</code> (perfiles, ajustes, caché
+              y datos de la congregación) y
+              <code>GR Media - Temporary Files</code> (archivos temporales).
             </li>
             <li>
               <strong>Versión instalada:</strong> los datos están en
-              <code>%APPDATA%\TM2</code>.
+              <code>%APPDATA%\GR Media</code>.
             </li>
           </ul>
           <div class="help-note">
             <q-icon name="mmm-info" />
             <p>
               Para hacer una copia de seguridad de la versión portable, copia
-              solo la carpeta <code>TM2 - User Data</code>. No hace falta copiar
-              el <code>.exe</code>.
+              solo la carpeta <code>GR Media - User Data</code>. No hace falta
+              copiar el <code>.exe</code>.
             </p>
           </div>
-          <h3>Al abrir TM2</h3>
+          <h3>Al abrir GR Media</h3>
           <ul class="help-list">
             <li>
               <strong>Solo puede haber una instancia abierta.</strong> Si se
-              abre TM2 dos veces, la segunda se cierra sola.
+              abre GR Media dos veces, la segunda se cierra sola.
             </li>
             <li>
               La versión portable no se actualiza sola: descarga la nueva
@@ -153,7 +153,7 @@
             </li>
             <li>
               Si Windows pregunta por permisos de cámara, micrófono o firewall,
-              acepta para que TM2 pueda usar esas funciones.
+              acepta para que GR Media pueda usar esas funciones.
             </li>
           </ul>
         </section>
@@ -163,9 +163,9 @@
             <q-icon class="help-section__icon" name="mmm-window" />
             <h2>3. La ventana principal</h2>
           </header>
-          <p>Arriba está la cabecera de TM2:</p>
+          <p>Arriba está la cabecera de GR Media:</p>
           <ul class="help-list">
-            <li><strong>Logo TM2:</strong> abre el cuadro «Acerca de».</li>
+            <li><strong>Logo GR Media:</strong> abre el cuadro «Acerca de».</li>
             <li>
               <strong>Perfil de la congregación:</strong> muestra el perfil
               activo. Al pulsarlo se cambia de perfil, se crea uno nuevo o se
@@ -215,8 +215,8 @@
             <h2>4. Pantallas de salida</h2>
           </header>
           <p>
-            TM2 usa una <strong>pantalla multimedia principal</strong> y, si hay
-            una segunda pantalla externa conectada, una
+            GR Media usa una <strong>pantalla multimedia principal</strong> y,
+            si hay una segunda pantalla externa conectada, una
             <strong>segunda salida</strong>.
           </p>
           <ul class="help-list">
@@ -294,17 +294,17 @@
           </figure>
           <h3>Elegir la fecha</h3>
           <p>
-            En el calendario lateral se elige el día. TM2 muestra las secciones
-            de esa reunión (partes de entre semana y de fin de semana) con sus
-            archivos.
+            En el calendario lateral se elige el día. GR Media muestra las
+            secciones de esa reunión (partes de entre semana y de fin de semana)
+            con sus archivos.
           </p>
           <h3>Descargar los archivos</h3>
           <p>
-            Al abrir una fecha, TM2 descarga automáticamente el multimedia que
-            falte. El estado se ve en la isla de acciones →
+            Al abrir una fecha, GR Media descarga automáticamente el multimedia
+            que falte. El estado se ve en la isla de acciones →
             <strong>Descargas</strong>. Si falta un archivo, el propio elemento
-            ofrece volver a descargarlo o localizarlo; si no hay conexión, TM2
-            lo avisa y mantiene lo que ya estaba descargado.
+            ofrece volver a descargarlo o localizarlo; si no hay conexión, GR
+            Media lo avisa y mantiene lo que ya estaba descargado.
           </p>
           <h3>Añadir archivos propios</h3>
           <ul class="help-list">
@@ -367,8 +367,9 @@
           </header>
           <p>
             Abre la pestaña <strong>Cámaras</strong>. La página
-            <strong>Cámaras y pantallas</strong> tiene tres bloques: control de
-            la cámara, captura de ventanas y escenas.
+            <strong>Cámaras y pantallas</strong> tiene cuatro bloques: los
+            monitores, el control de la cámara, la captura de ventanas y las
+            escenas.
           </p>
           <figure class="help-figure">
             <img
@@ -381,6 +382,27 @@
               pantalla de salida.
             </figcaption>
           </figure>
+          <h3>Monitores</h3>
+          <figure class="help-figure">
+            <img
+              alt="Bloque de monitores con una imagen de cada salida"
+              class="help-figure__image"
+              :src="asset('09-monitores.png')"
+            />
+            <figcaption>
+              Cada recuadro muestra la imagen actual de una salida, su pantalla
+              y si está activa.
+            </figcaption>
+          </figure>
+          <p>
+            El bloque <strong>Monitores</strong>, al principio de la página,
+            muestra lo que está viendo cada salida en este momento: la salida
+            principal, la segunda salida, el monitor del orador y el sitio web.
+            Cada recuadro indica en qué pantalla está y muestra una imagen
+            actualizada cada segundo. Si una ventana está cerrada u oculta, dice
+            <strong>Sin mostrar</strong> en lugar de dejar una imagen antigua, y
+            el bloque se pausa mientras la ventana principal está minimizada.
+          </p>
           <h3>Control de la cámara</h3>
           <ol class="help-steps">
             <li>
@@ -436,6 +458,50 @@
               cámara, guardar la captura o mostrar la presentación.
             </figcaption>
           </figure>
+          <h3>Modo estudio (previa y programa)</h3>
+          <p>
+            Activa <strong>Modo estudio</strong> en la parte superior del panel
+            para preparar la salida antes de mostrarla, como en OBS o vMix. El
+            panel añade un monitor de <strong>previa (PVW)</strong>, con la
+            cámara o la captura tal como se verán, y un monitor de
+            <strong>programa (PGM)</strong> con lo que ve la audiencia.
+          </p>
+          <figure class="help-figure">
+            <img
+              alt="Panel de cámaras con el modo estudio activo, la previa y el programa"
+              class="help-figure__image"
+              :src="asset('08-estudio.png')"
+            />
+            <figcaption>
+              Con el modo estudio activo, la previa y el programa se muestran
+              juntos y la salida se controla con «Al aire» y «Cortar».
+            </figcaption>
+          </figure>
+          <ol class="help-steps">
+            <li>
+              Elige la cámara, la disposición y el encuadre. Los cambios se
+              quedan en la previa y no salen al aire.
+            </li>
+            <li>
+              Para una ventana o pantalla, elige el origen y pulsa
+              <strong>Cargar en la vista previa</strong>.
+            </li>
+            <li>
+              Pulsa <strong>Al aire</strong> para enviar la previa a la pantalla
+              de salida.
+            </li>
+            <li>
+              Pulsa <strong>Cortar</strong> para devolver la salida a la
+              pantalla de multimedia.
+            </li>
+          </ol>
+          <p>
+            Las escenas se cargan primero en la previa; nada sale al aire hasta
+            pulsar <strong>Al aire</strong>. Mientras la misma cámara está al
+            aire, la previa se pausa para no disputarle el dispositivo; si lo
+            que está al aire es una captura, la cámara sí puede seguir en la
+            previa.
+          </p>
           <h3>Captura de ventanas y pantallas</h3>
           <p>
             Sirve para mostrar a la audiencia otra aplicación, por ejemplo una
@@ -452,29 +518,32 @@
               <strong>pantalla de captura</strong>.
             </li>
             <li>
-              Pulsa <strong>Mostrar captura en pantalla</strong>;
-              <strong>Detener captura</strong> la corta.
+              Fuera del modo estudio, pulsa
+              <strong>Mostrar captura en pantalla</strong>;
+              <strong>Detener captura</strong> la corta. Con el modo estudio,
+              usa <strong>Cargar en la vista previa</strong> y luego
+              <strong>Al aire</strong>.
             </li>
           </ol>
           <p>
             Mientras la captura está activa, la cámara y la pantalla de
             multimedia se pausan. Si la ventana compartida se cierra o se
-            desconecta su pantalla, la captura se detiene y TM2 lo avisa.
+            desconecta su pantalla, la captura se detiene y GR Media lo avisa.
           </p>
           <div class="help-note help-note--warning">
             <q-icon name="mmm-warning" />
             <p>
-              No elijas como origen la propia salida de TM2 ni su segunda
+              No elijas como origen la propia salida de GR Media ni su segunda
               salida: la imagen se reflejaría en bucle.
             </p>
           </div>
           <h3>Modo solo cámaras</h3>
           <p>
             En Ajustes → General puedes activar
-            <strong>Modo solo cámaras (sin multimedia de reunión)</strong>. TM2
-            abre directamente la página Cámaras y oculta Reunión, las descargas
-            y Sitio web. Cámaras, pantallas de salida, Ajustes y Ayuda siguen
-            disponibles.
+            <strong>Modo solo cámaras (sin multimedia de reunión)</strong>. GR
+            Media abre directamente la página Cámaras y oculta Reunión, las
+            descargas y Sitio web. Cámaras, pantallas de salida, Ajustes y Ayuda
+            siguen disponibles.
           </p>
           <h3>Permisos de cámara en Windows</h3>
           <ol class="help-steps">
@@ -487,8 +556,10 @@
               <strong>Configuración → Privacidad → Cámara</strong>
               y permite el acceso a las aplicaciones de escritorio.
             </li>
-            <li>Vuelve a TM2 y pulsa <strong>Detectar cámaras</strong>.</li>
-            <li>Si sigue sin funcionar, reinicia TM2.</li>
+            <li>
+              Vuelve a GR Media y pulsa <strong>Detectar cámaras</strong>.
+            </li>
+            <li>Si sigue sin funcionar, reinicia GR Media.</li>
           </ol>
         </section>
 
@@ -572,7 +643,8 @@
           </ol>
           <p>
             Si el control remoto no arranca, comprueba el puerto (puede estar
-            ocupado por otro programa) y permite TM2 en el firewall de Windows.
+            ocupado por otro programa) y permite GR Media en el firewall de
+            Windows.
           </p>
         </section>
 
@@ -593,7 +665,8 @@
             </li>
           </ul>
           <p>
-            Es útil para mostrar artículos o videos del sitio sin salir de TM2.
+            Es útil para mostrar artículos o videos del sitio sin salir de GR
+            Media.
           </p>
         </section>
 
@@ -673,7 +746,7 @@
               <h3>Antes de la reunión</h3>
               <ol class="help-steps">
                 <li>
-                  Abre TM2 y comprueba que el perfil correcto está activo.
+                  Abre GR Media y comprueba que el perfil correcto está activo.
                 </li>
                 <li>Conecta el proyector y la segunda pantalla, si se usa.</li>
                 <li>
@@ -732,7 +805,7 @@
                 <li>Detén la reproducción y la cámara.</li>
                 <li>Detén la grabación si estaba activa.</li>
                 <li>Exporta el informe del cronómetro si se necesita.</li>
-                <li>Cierra TM2 con el botón de cerrar de la ventana.</li>
+                <li>Cierra GR Media con el botón de cerrar de la ventana.</li>
               </ol>
             </div>
           </div>
@@ -766,15 +839,17 @@
           <dl class="help-paths">
             <div>
               <dt>Carpeta de datos portable</dt>
-              <dd><code>TM2 - User Data</code>, junto al ejecutable.</dd>
+              <dd><code>GR Media - User Data</code>, junto al ejecutable.</dd>
             </div>
             <div>
               <dt>Carpeta temporal portable</dt>
-              <dd><code>TM2 - Temporary Files</code>, junto al ejecutable.</dd>
+              <dd>
+                <code>GR Media - Temporary Files</code>, junto al ejecutable.
+              </dd>
             </div>
             <div>
               <dt>Carpeta de datos instalada</dt>
-              <dd><code>%APPDATA%\TM2</code>.</dd>
+              <dd><code>%APPDATA%\GR Media</code>.</dd>
             </div>
             <div>
               <dt>Ajuste de reproducción</dt>
@@ -820,13 +895,13 @@ import { useI18n } from 'vue-i18n';
 const { locale, t } = useI18n();
 
 const appVersion = computed(() => `v${import.meta.env.version ?? ''}`);
-const updatedLabel = '30 de octubre de 2026';
+const updatedLabel = '6 de noviembre de 2026';
 
 const asset = (fileName: string) =>
   `${import.meta.env.BASE_URL}help/${fileName}`;
 
 const toc = [
-  { id: 'que-es', label: 'Qué es TM2' },
+  { id: 'que-es', label: 'Qué es GR Media' },
   { id: 'instalacion', label: 'Instalación y datos' },
   { id: 'ventana', label: 'Ventana principal' },
   { id: 'pantallas', label: 'Pantallas de salida' },
@@ -859,7 +934,7 @@ const troubleshooting = [
     answer: [
       'Puede estar en uso por otra aplicación. Ciérrala o elige otra cámara.',
       'Revisa los permisos de cámara de Windows.',
-      'Pulsa Detectar cámaras y, si hace falta, reinicia TM2.',
+      'Pulsa Detectar cámaras y, si hace falta, reinicia GR Media.',
     ],
     question: 'La cámara no se abre',
   },
@@ -871,7 +946,7 @@ const troubleshooting = [
   },
   {
     answer: [
-      'Estás capturando la propia salida de TM2 o su segunda salida. Elige otra ventana u otra pantalla.',
+      'Estás capturando la propia salida de GR Media o su segunda salida. Elige otra ventana u otra pantalla.',
     ],
     question: 'La imagen se repite en bucle al capturar',
   },
@@ -887,7 +962,7 @@ const troubleshooting = [
     answer: [
       'La computadora y la tableta deben estar en la misma red.',
       'Comprueba el puerto en Ajustes; si está ocupado, elige otro.',
-      'Permite TM2 en el firewall de Windows.',
+      'Permite GR Media en el firewall de Windows.',
       'Usa la dirección que muestra el panel del cronómetro, no una inventada.',
     ],
     question: 'El control remoto del cronómetro no conecta',
@@ -898,25 +973,25 @@ const troubleshooting = [
   },
   {
     answer: [
-      'En el propio elemento, usa Localizar archivo multimedia para volver a vincularlo, o elimínalo y vuelve a añadirlo. Si es multimedia de JW.org, TM2 intentará descargarlo de nuevo.',
+      'En el propio elemento, usa Localizar archivo multimedia para volver a vincularlo, o elimínalo y vuelve a añadirlo. Si es multimedia de JW.org, GR Media intentará descargarlo de nuevo.',
     ],
     question: 'Un archivo multimedia falta',
   },
   {
     answer: [
-      'TM2 intenta recuperarla automáticamente. Si se repite, reinicia TM2. Como último recurso, en Ajustes → Avanzado puedes probar a desactivar la aceleración por hardware.',
+      'GR Media intenta recuperarla automáticamente. Si se repite, reinicia GR Media. Como último recurso, en Ajustes → Avanzado puedes probar a desactivar la aceleración por hardware.',
     ],
     question: 'La ventana de multimedia se cerró o se reinició',
   },
   {
     answer: [
-      'Es normal: la versión portable no usa el actualizador. Descarga la nueva versión y conserva la carpeta TM2 - User Data.',
+      'Es normal: la versión portable no usa el actualizador. Descarga la nueva versión y conserva la carpeta GR Media - User Data.',
     ],
     question: 'La versión portable no se actualiza',
   },
   {
     answer: [
-      'Puede ocurrir con el asistente de Zoom o con la captura de pantalla. Permite TM2 en el antivirus y vuelve a intentarlo. Si faltan archivos del asistente de Zoom, reinstalar TM2 debería restaurarlos.',
+      'Puede ocurrir con el asistente de Zoom o con la captura de pantalla. Permite GR Media en el antivirus y vuelve a intentarlo. Si faltan archivos del asistente de Zoom, reinstalar GR Media debería restaurarlos.',
     ],
     question: 'Windows o el antivirus bloquean funciones',
   },

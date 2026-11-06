@@ -116,5 +116,30 @@ export const useTeoSceneLauncher = (
     return true;
   };
 
-  return { canActivateScene, launchScene, notifyCameraStarted };
+  /**
+   * Loads a scene into the studio preview without taking it on air. The camera
+   * is resolved the same way as when launching, so the preview shows the
+   * device the scene will actually use.
+   */
+  const prepareScene = async (
+    scene: TeoCameraScene,
+  ): Promise<null | SceneCamera> => {
+    const camera = await resolveSceneCamera(scene);
+    if (!camera) {
+      createTemporaryNotification({
+        icon: 'mmm-video-off',
+        message: t('teo-scene-camera-missing'),
+        type: 'warning',
+      });
+      return null;
+    }
+
+    scene.cameraId = camera.deviceId;
+    scene.cameraLabel = camera.label;
+
+    if (!teoCamera.loadSceneIntoPreview(scene.id)) return null;
+    return camera;
+  };
+
+  return { canActivateScene, launchScene, notifyCameraStarted, prepareScene };
 };

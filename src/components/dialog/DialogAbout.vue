@@ -283,7 +283,9 @@ const parseReleaseNotes = () => {
 // Release notes come from the project repository, which still calls the app
 // M³; this build shows its own name instead.
 const normalizeReleaseNotesBrand = (text: string) =>
-  text.replaceAll('Meeting Media Manager', 'TM2').replaceAll('M³', 'TM2');
+  text
+    .replaceAll('Meeting Media Manager', 'GR Media')
+    .replaceAll('M³', 'GR Media');
 
 const loadReleaseNotes = async () => {
   const result = await fetchReleaseNotes(camelToKebabCase(locale.value));
