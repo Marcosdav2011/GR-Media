@@ -40,8 +40,9 @@
     </q-card>
   </q-dialog>
   <q-page padding>
+    <SettingsPinGate v-if="settingsLocked" />
     <q-form
-      v-if="currentSettings"
+      v-else-if="currentSettings"
       ref="settingsFormDynamic"
       greedy
       no-error-focus
@@ -121,6 +122,8 @@
                 </span>
                 <span>{{ t(group.name) }}</span>
               </div>
+
+              <SettingsPinCard v-if="groupId === 'advanced'" />
 
               <div v-if="groupId === 'advanced'" class="subgroup-card">
                 <q-item-label class="settings-subgroup-label" header>
@@ -343,6 +346,8 @@ import { useEventListener, whenever } from '@vueuse/core';
 import { useRouteParams } from '@vueuse/router';
 import BaseInput from 'components/form-inputs/BaseInput.vue';
 import SettingsMeetingChecklists from 'components/settings/SettingsMeetingChecklists.vue';
+import SettingsPinCard from 'components/settings/SettingsPinCard.vue';
+import SettingsPinGate from 'components/settings/SettingsPinGate.vue';
 import { storeToRefs } from 'pinia';
 import { type QForm, type QInput, useMeta, useQuasar } from 'quasar';
 import DialogCongregationLookup from 'src/components/dialog/DialogCongregationLookup.vue';
@@ -419,8 +424,8 @@ const closeSettingsFilter = () => {
 
 const toggleSettingsFilter = () => {
   if (
-    !settingsFilterVisible.value &&
-    Date.now() - settingsFilterClosedAt < 150
+    settingsLocked.value ||
+    (!settingsFilterVisible.value && Date.now() - settingsFilterClosedAt < 150)
   ) {
     return;
   }
@@ -456,6 +461,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  // Leaving the settings locks them again.
+  settingsUnlocked.value = false;
   globalThis.removeEventListener(
     'openCongregationLookup',
     openCongregationLookup,
@@ -486,6 +493,8 @@ const {
   currentSettings,
   online,
   onlyShowInvalidSettings,
+  settingsLocked,
+  settingsUnlocked,
 } = storeToRefs(currentState);
 const { getInvalidSettings } = currentState;
 
@@ -821,7 +830,9 @@ const importCurrentProfileSettings = async () => {
     const importedSettings = await importProfileSettingsFromFile();
     if (!importedSettings) return;
 
-    Object.assign(currentSettings.value, importedSettings);
+    Object.assign(currentSettings.value, importedSettings, {
+      settingsPin: currentSettings.value.settingsPin,
+    });
     validateSettingsLocal();
     createTemporaryNotification({
       message: t('profile-settings-imported'),
@@ -936,6 +947,11 @@ onMounted(() => {
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 500);
   }
+});
+
+// Another profile has its own PIN, even with this page still open.
+watch(currentCongregation, () => {
+  settingsUnlocked.value = false;
 });
 
 watch(visibleGroupKeys, (keys) => {

@@ -132,6 +132,10 @@ interface Store {
   pendingSectionImports: MediaSectionIdentifier[];
   pinyinActive: boolean;
   selectedDate: string;
+  /** Wrong settings PINs entered per profile, since GR Media started. */
+  settingsPinFailedAttempts: Record<string, number>;
+  /** The settings PIN was entered; never persisted, so it locks on restart. */
+  settingsUnlocked: boolean;
   /**
    * On-screen message shown to whoever watches the timer/speaker display.
    * Session-only: it's an ad-hoc announcement, not a saved setting.
@@ -504,13 +508,13 @@ export const useCurrentStateStore = defineStore('current-state', {
 
       return count;
     },
-
     currentLangObject(): JwLanguage | undefined {
       const jwStore = useJwStore();
       return jwStore.jwLanguages.list.find(
         (l) => l.langcode === this.currentSettings?.lang,
       );
     },
+
     currentSettings: (state) => {
       const congregationSettingsStore = useCongregationSettingsStore();
       return Object.keys(congregationSettingsStore.congregations).length > 0
@@ -657,6 +661,9 @@ export const useCurrentStateStore = defineStore('current-state', {
         return null;
       }
     },
+    settingsLocked(): boolean {
+      return !!this.currentSettings?.settingsPin && !this.settingsUnlocked;
+    },
     someItemsHiddenForSelectedDate(): boolean {
       if (!this.selectedDateObject?.mediaSections) return false;
 
@@ -726,6 +733,8 @@ export const useCurrentStateStore = defineStore('current-state', {
       pendingSectionImports: [],
       pinyinActive: false,
       selectedDate: formatDate(new Date(), 'YYYY/MM/DD'),
+      settingsPinFailedAttempts: {},
+      settingsUnlocked: false,
       speakerNotice: '',
       timerRemoteUrls: [],
       timerWindowVisible: false,
