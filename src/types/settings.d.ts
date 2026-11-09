@@ -346,6 +346,7 @@ export interface SettingsValues {
   timerRemotePort: null | string;
   timerShowClock: boolean;
   timerShowOnActionIsland: boolean;
+  timerShowPlannedStartTimes: boolean;
   timerTextColor: string;
   timerTextSize: string;
   timerTimeOfDayDisplay: TimerTimeOfDayDisplay;

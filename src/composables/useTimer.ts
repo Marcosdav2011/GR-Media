@@ -432,6 +432,7 @@ const createTimer = () => {
   const customPartOptions = computed<MeetingPartOption[]>(() =>
     customTimerParts.value.map((part) => ({
       label: `${part.label} (${normalizePartDuration(part.duration)} min.)`,
+      name: part.label,
       section: 'custom-timer-parts',
       value: part.id,
     })),
@@ -506,6 +507,7 @@ const createTimer = () => {
           duration: partDurations.value[part] ?? 0,
           part: i,
         }),
+        name: t('ayfm-part-name', { part: i }),
         section: 'ayfm',
         value: part,
         warning: ayfmWarning,
@@ -525,6 +527,10 @@ const createTimer = () => {
           duration: partDurations.value[part] ?? 0,
           part: i,
         }),
+        name:
+          lacPartsCount.value === 1
+            ? t('lac')
+            : t('lac-part-name', { part: i }),
         section: 'lac',
         value: part,
         warning: lacWarning,
@@ -565,6 +571,7 @@ const createTimer = () => {
     // No meeting: only the custom parts, which need no section header.
     return customPartOptions.value.map((option) => ({
       label: option.label,
+      name: option.name,
       value: option.value,
     }));
   });
