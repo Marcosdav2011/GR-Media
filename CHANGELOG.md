@@ -52,6 +52,7 @@ For translations of the most important changes, see the [`./release-notes/`](./r
 
 ### 🐞 Bug Fixes
 
+- 🐞 **Profile Selection**: Picking the profile that's already open in the profile selection no longer leaves the media list loading forever on every meeting day, and no longer stops the downloads in progress.
 - 🐞 **Media Display**: Going from one picture to the next faded out to the yeartext (or the custom background) before the next picture faded in. Pictures crossfade straight into each other again, and the outgoing picture now stays fully on screen until the next one has faded in over it, so nothing shows through in between.
 - 🐞 **GR Media — Second output**: The second external screen now keeps showing its background — media or the yeartext — while the camera or a window capture is on the main output. The camera used to open on the second output's screen by default, so its full-screen window covered the mirror or pulled it away; the camera now starts on the multimedia screen, and the second output moves to the remaining screen whenever the camera, a capture or the media window takes another one, never sharing the screen the output window fills.
 - 🐞 **TM2 — Updates**: TM2 no longer checks the Meeting Media Manager release feed or offers its updates. The inherited updater still pointed at that project's GitHub releases, so it could download Meeting Media Manager's installer and update that app from inside TM2. Updates are now off in TM2 builds, and the packaged app no longer carries that update feed.
