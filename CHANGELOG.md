@@ -29,6 +29,7 @@ For translations of the most important changes, see the [`./release-notes/`](./r
 
 ### 🛠️ Improvements and Tweaks
 
+- 🛠️ **Fewer Repeated Downloads**: When two parts of the app ask for the same thing at the same moment, like a song's video links, details or thumbnail, it now asks the website once and shares the answer, instead of asking twice.
 - 🛠️ **TM2 — Meeting page**: When media playback is turned off in Settings, the meeting page now says so, with a button that opens that setting, instead of showing the media list without any play buttons and looking broken.
 - 🛠️ **TM2 — Output Screens**: The display settings now let you fix which screen shows multimedia and which shows the camera. The multimedia screen shows the yeartext and media whenever the camera isn't projecting; the camera screen hosts the camera, and scenes and the camera preview follow it. Both assignments are kept per profile and survive restarts, so screens no longer swap roles after a monitor change or a camera scene.
 - 🛠️ **TM2 — Camera scenes**: A saved scene can now be updated in place with the current camera, screen, layout and framing, instead of deleting it and saving it again under the same name. This keeps a scene in tune with a camera that was moved or re-framed after the scene was saved.
