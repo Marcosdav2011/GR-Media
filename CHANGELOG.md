@@ -52,6 +52,8 @@ For translations of the most important changes, see the [`./release-notes/`](./r
 
 ### 🐞 Bug Fixes
 
+- 🐞 **Media Export**: With "Convert exported files to MP4" turned on, WAV, FLAC, OGG and M4A audio files couldn't be converted and were left out of the export. They're now converted like MP3 files.
+- 🐞 **Error Reports**: Some error reports about folders that couldn't be created could include the Windows user name. It's now removed from those too, as it already was everywhere else.
 - 🐞 **HEIC Images**: HEIC photos, dropped in or inside a playlist, now load: converting them always failed, leaving an empty JPEG file next to the photo. A HEIC that really can't be converted now shows a message instead of a blank image.
 - 🐞 **Profile Selection**: Picking the profile that's already open in the profile selection no longer leaves the media list loading forever on every meeting day, and no longer stops the downloads in progress.
 - 🐞 **Media Display**: Going from one picture to the next faded out to the yeartext (or the custom background) before the next picture faded in. Pictures crossfade straight into each other again, and the outgoing picture now stays fully on screen until the next one has faded in over it, so nothing shows through in between.
