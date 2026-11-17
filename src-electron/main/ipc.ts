@@ -126,6 +126,10 @@ import {
   moveMediaWindow,
 } from 'src-electron/main/window/window-media';
 import {
+  closeMultiviewWindow,
+  createMultiviewWindow,
+} from 'src-electron/main/window/window-multiview';
+import {
   createTimerWindow,
   moveTimerWindow,
   timerWindowInfo,
@@ -290,6 +294,14 @@ handleIpcSend('toggleTimerWindow', async (_e, show: boolean) => {
     await moveTimerWindow();
   } else {
     timerWindowInfo.timerWindow?.close();
+  }
+});
+
+handleIpcSend('toggleMultiviewWindow', (_e, show: boolean) => {
+  if (show) {
+    createMultiviewWindow();
+  } else {
+    closeMultiviewWindow();
   }
 });
 

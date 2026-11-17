@@ -172,6 +172,9 @@ export const electronApi: ElectronApi = {
   onMediaWindowRendererGone: function (callback) {
     throw new Error('Function not implemented.');
   },
+  onMultiviewWindowClosed: function () {
+    return () => void 0;
+  },
   onPathProbeNetworkWarning: function (callback) {
     throw new Error('Function not implemented.');
   },
@@ -290,6 +293,7 @@ export const electronApi: ElectronApi = {
   toggleMediaWindow: function (show) {
     throw new Error('Function not implemented.');
   },
+  toggleMultiviewWindow: () => undefined,
   toggleTimerWindow: function (show) {
     throw new Error('Function not implemented.');
   },

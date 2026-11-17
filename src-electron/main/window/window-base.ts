@@ -44,7 +44,8 @@ export function closeOtherWindows(source: BrowserWindow) {
  * @returns The created window
  */
 export function createWindow(
-  name: 'auxiliary' | 'main' | 'media' | 'timer' | 'website' = 'main',
+  name:
+    'auxiliary' | 'main' | 'media' | 'multiview' | 'timer' | 'website' = 'main',
   options?: BrowserWindowConstructorOptions,
   websiteParams?: JwSiteParams,
 ) {
@@ -110,6 +111,9 @@ export function createWindow(
     case 'auxiliary':
     case 'media':
       page = 'media-player';
+      break;
+    case 'multiview':
+      page = 'multiview';
       break;
     case 'timer':
       page = 'timer';

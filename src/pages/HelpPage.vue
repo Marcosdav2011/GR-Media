@@ -502,6 +502,91 @@
             que está al aire es una captura, la cámara sí puede seguir en la
             previa.
           </p>
+          <h3>Transiciones</h3>
+          <p>
+            En el monitor de programa, <strong>Transición</strong> elige cómo
+            entra la fuente al pulsar <strong>Al aire</strong>:
+            <strong>Corte</strong> la muestra de inmediato, y
+            <strong>Fundido</strong> o <strong>Deslizar</strong> la animan
+            durante la duración elegida (de 0,3 a 1,2 s). Las transiciones solo
+            se aplican en el modo estudio; al cortar, la salida vuelve a la
+            pantalla de multimedia.
+          </p>
+          <h3>Multimedia en la previa</h3>
+          <p>
+            Además de la cámara y la captura, la previa puede mostrar un video,
+            una imagen o una canción del día seleccionado. La tarjeta
+            <strong>Multimedia en previa</strong> muestra los elementos visibles
+            de ese día tal como los reproduciría la página de la reunión, en una
+            cola que marca cuál está <strong>al aire</strong> y cuál es el
+            <strong>siguiente</strong>; avanza con las flechas o elige uno en la
+            cola y pulsa <strong>Cargar en previa</strong>. La previa y el
+            multiview muestran el archivo mientras el monitor de programa sigue
+            con lo que ve la audiencia.
+          </p>
+          <p>
+            Pulsa <strong>Al aire</strong> para enviarlo a la salida con la
+            transición elegida: reemplaza lo que estuviera reproduciéndose, sin
+            volver a la página de la reunión. <strong>Cortar</strong> devuelve
+            la salida a la pantalla de multimedia. La previa usa el archivo de
+            la caché cuando ya está descargado y, si falta, lo toma del enlace;
+            las canciones muestran su nombre, porque no tienen imagen.
+            <strong>Cargar cámara en previa</strong> devuelve la cámara a la
+            previa cuando estabas revisando multimedia, y si el video que está
+            al aire termina, la previa vuelve sola a la cámara sin cambiar lo
+            que hace la salida.
+          </p>
+          <p>
+            Mientras hay un video en la previa, su esquina muestra cuánto le
+            queda, y el monitor de programa muestra lo mismo para lo que ve la
+            audiencia. Estos tiempos se ven solo en los monitores del operador,
+            nunca en la pantalla de salida.
+          </p>
+          <h3>Fuentes y capas</h3>
+          <p>
+            La lista <strong>Fuentes</strong> del modo estudio muestra, de
+            arriba abajo, el orden en que la audiencia ve la cámara, la captura
+            de ventana, los multimedia y el texto del año. Mueve cada fuente con
+            las flechas para cambiar qué queda encima, y usa el ojo para
+            ocultarla de la salida sin detenerla.
+            <strong>Restaurar orden original</strong> devuelve el orden habitual
+            y muestra todas las fuentes; al apagar el modo estudio también se
+            restauran, para que una fuente oculta no se quede fuera en una
+            reunión normal.
+          </p>
+          <h3>Multiview a pantalla completa</h3>
+          <p>
+            El botón <strong>Abrir multiview</strong>, junto al título de
+            Monitores, abre una ventana a pantalla completa para el operador.
+            Muestra la <strong>previa (PVW)</strong> de la cámara, la captura o
+            el multimedia que estás preparando y el
+            <strong>programa (PGM)</strong> tal como lo ve la audiencia, ambos
+            con el tiempo restante si hay un video, además de las demás salidas
+            (segunda salida, monitor del orador y sitio web) y el orden de las
+            fuentes. Mientras está abierto, la ventana principal le cede la
+            cámara para que la previa se vea allí, y la recupera al cerrarlo.
+            Pulsa <strong>Esc</strong> o el botón de cerrar para salir.
+          </p>
+          <h3>Controles desde el multiview y atajos</h3>
+          <p>
+            La barra inferior del multiview controla el estudio sin volver a la
+            ventana principal: <strong>Anterior</strong> y
+            <strong>Siguiente</strong> recorren el multimedia de la previa,
+            <strong>Cámara</strong> carga la cámara en la previa,
+            <strong>Al aire</strong> envía la previa al programa con la
+            transición elegida y <strong>Cortar</strong> devuelve la salida a la
+            pantalla de multimedia.
+          </p>
+          <p>
+            Los mismos atajos funcionan en el multiview y en la página Cámaras
+            con el modo estudio activo, salvo que estés escribiendo en un campo:
+            <strong>Enter</strong> pone la previa al aire,
+            <strong>Supr</strong> o <strong>Retroceso</strong> corta el programa
+            (Retroceso solo en el multiview), <strong>←</strong> y
+            <strong>→</strong> recorren la previa cuando tiene multimedia,
+            <strong>C</strong> carga la cámara (solo en el multiview) y
+            <strong>Esc</strong> cierra el multiview.
+          </p>
           <h3>Captura de ventanas y pantallas</h3>
           <p>
             Sirve para mostrar a la audiencia otra aplicación, por ejemplo una

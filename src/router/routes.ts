@@ -51,6 +51,15 @@ const routes: RouteRecordRaw[] = [
   }),
 
   mainChildRoute(
+    '/multiview',
+    'multiview',
+    'MultiviewPage',
+    { title: 'teo-multiview' },
+    undefined,
+    'MultiviewLayout',
+  ),
+
+  mainChildRoute(
     '/media-player',
     'media-player',
     'MediaPlayerPage',

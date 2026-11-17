@@ -55,7 +55,7 @@
           @pointerup="endPan"
         >
           <video
-            v-show="studioPreviewKind !== 'capture'"
+            v-show="studioPreviewKind === 'camera'"
             ref="previewVideo"
             autoplay
             class="teo-camera-preview__video"
@@ -71,16 +71,44 @@
             muted
             playsinline
           />
-          <div
-            v-if="!activePreviewStream"
-            class="teo-camera-preview__placeholder"
-          >
+          <img
+            v-if="
+              studioPreviewKind === 'media' &&
+              mediaPreviewIsImage &&
+              mediaPreviewUrl
+            "
+            alt=""
+            class="teo-camera-preview__media"
+            :src="mediaPreviewUrl"
+          />
+          <video
+            v-else-if="
+              studioPreviewKind === 'media' &&
+              mediaPreviewIsVideo &&
+              mediaPreviewUrl
+            "
+            :key="mediaPreviewUrl"
+            ref="mediaPreviewVideo"
+            autoplay
+            class="teo-camera-preview__media"
+            loop
+            muted
+            playsinline
+            :src="mediaPreviewUrl"
+            @loadedmetadata="onMediaPreviewMetadata"
+            @timeupdate="onMediaPreviewTimeUpdate"
+          />
+          <div v-if="!previewHasSource" class="teo-camera-preview__placeholder">
             <q-icon :name="previewPlaceholderIcon" size="2rem" />
             <div class="text-caption">{{ previewPlaceholderText }}</div>
           </div>
         </div>
 
-        <div v-if="studioPreviewKind !== 'capture'" class="teo-framing">
+        <div v-if="previewRemaining" class="teo-camera-preview__time">
+          {{ t('teo-time-left', { time: previewRemaining }) }}
+        </div>
+
+        <div v-if="studioPreviewKind === 'camera'" class="teo-framing">
           <div class="teo-framing__head">
             <div class="teo-framing__label">{{ t('teo-camera-zoom') }}</div>
             <span class="teo-framing__value">{{ zoomLabel }}</span>
@@ -108,6 +136,19 @@
           <div class="teo-camera-card__hint">
             {{ t('teo-camera-framing-hint') }}
           </div>
+        </div>
+
+        <div
+          v-if="studioMode && studioPreviewKind !== 'camera'"
+          class="teo-studio-buttons"
+        >
+          <q-btn
+            icon="mmm-video"
+            :label="t('teo-camera-load-preview')"
+            no-caps
+            outline
+            @click="loadCameraPreview"
+          />
         </div>
       </section>
 
@@ -142,6 +183,9 @@
           <div class="teo-program-screen__screen">
             {{ programScreenLabel }}
           </div>
+          <div v-if="programRemaining" class="teo-program-screen__time">
+            {{ t('teo-time-left', { time: programRemaining }) }}
+          </div>
           <div v-if="!programIsLive" class="text-caption">
             {{ t('teo-program-empty') }}
           </div>
@@ -166,8 +210,36 @@
             @click="cutProgram"
           />
         </div>
+        <div class="teo-transition">
+          <q-select
+            v-model="transitionType"
+            dense
+            emit-value
+            :label="t('teo-transition')"
+            map-options
+            option-label="label"
+            option-value="value"
+            :options="transitionTypeOptions"
+            outlined
+          />
+          <q-select
+            v-if="transitionType !== 'cut'"
+            v-model="transitionMs"
+            dense
+            emit-value
+            :label="t('teo-transition-duration')"
+            map-options
+            option-label="label"
+            option-value="value"
+            :options="transitionDurationOptions"
+            outlined
+          />
+        </div>
         <div class="teo-camera-card__hint">
           {{ t('teo-studio-controls-hint') }}
+        </div>
+        <div class="teo-camera-card__hint">
+          {{ t('teo-studio-shortcuts-hint') }}
         </div>
       </section>
 
@@ -468,6 +540,151 @@
       </section>
     </div>
 
+    <section v-if="studioMode" class="teo-camera-card teo-camera-card--media">
+      <div class="teo-camera-card__head">
+        <div>
+          <div class="teo-camera-card__title">
+            {{ t('teo-media-preview') }}
+          </div>
+          <div class="teo-camera-card__hint">
+            {{ t('teo-media-preview-hint') }}
+          </div>
+        </div>
+        <span
+          class="teo-camera-pill"
+          :class="{ 'teo-camera-pill--live': mediaInPreview }"
+        >
+          <span class="teo-camera-pill__dot" />
+          {{ mediaInPreview ? t('teo-preview-live') : t('teo-preview-off') }}
+        </span>
+      </div>
+      <template v-if="mediaPreviewOptions.length">
+        <div class="teo-media-picker">
+          <q-btn
+            :aria-label="t('teo-media-previous')"
+            dense
+            flat
+            icon="mmm-left"
+            round
+            @click="previewPreviousMedia"
+          />
+          <span class="teo-media-picker__count">
+            {{ selectedMediaPosition }}
+          </span>
+          <q-btn
+            :aria-label="t('teo-media-next')"
+            dense
+            flat
+            icon="mmm-right"
+            round
+            @click="previewNextMedia"
+          />
+        </div>
+        <div class="teo-media-queue" role="list">
+          <button
+            v-for="option in mediaQueue"
+            :key="option.value"
+            class="teo-media-queue__item"
+            :class="{
+              'is-live': option.live,
+              'is-selected': option.value === mediaPreviewId,
+            }"
+            role="listitem"
+            type="button"
+            @click="selectMediaOption(option.value)"
+          >
+            <span class="teo-media-queue__title">{{ option.label }}</span>
+            <span class="teo-media-queue__meta">{{ option.section }}</span>
+            <span v-if="option.live" class="teo-media-queue__tag">
+              {{ t('teo-media-queue-now') }}
+            </span>
+            <span v-else-if="option.next" class="teo-media-queue__tag">
+              {{ t('teo-media-queue-next') }}
+            </span>
+          </button>
+        </div>
+        <div class="teo-studio-buttons">
+          <q-btn
+            :disable="!canLoadMediaPreview"
+            :icon="mediaInPreview ? 'mmm-eye' : 'mmm-media'"
+            :label="
+              mediaInPreview
+                ? t('teo-media-hide-preview')
+                : t('teo-media-load-preview')
+            "
+            no-caps
+            outline
+            @click="toggleMediaPreview"
+          />
+        </div>
+      </template>
+      <div v-else class="teo-camera-card__hint">
+        {{ t('teo-media-empty') }}
+      </div>
+    </section>
+
+    <section v-if="studioMode" class="teo-camera-card teo-camera-card--layers">
+      <div class="teo-camera-card__head">
+        <div>
+          <div class="teo-camera-card__title">{{ t('teo-layers') }}</div>
+          <div class="teo-camera-card__hint">{{ t('teo-layers-hint') }}</div>
+        </div>
+        <q-btn
+          :aria-label="t('teo-layers-reset')"
+          dense
+          flat
+          icon="mmm-reset"
+          round
+          size="sm"
+          @click="teoCamera.resetLayers()"
+        >
+          <q-tooltip :delay="500">{{ t('teo-layers-reset') }}</q-tooltip>
+        </q-btn>
+      </div>
+      <div class="teo-layers">
+        <div
+          v-for="(layer, index) in orderedLayers"
+          :key="layer.id"
+          class="teo-layer"
+          :class="{ 'teo-layer--hidden': layer.hidden }"
+        >
+          <q-icon :name="layer.icon" size="18px" />
+          <span class="teo-layer__name">{{ layer.label }}</span>
+          <q-btn
+            :aria-label="t('teo-layer-move-up')"
+            dense
+            :disable="index === 0"
+            flat
+            icon="mmm-up"
+            round
+            size="sm"
+            @click="teoCamera.moveLayer(layer.id, 'up')"
+          />
+          <q-btn
+            :aria-label="t('teo-layer-move-down')"
+            dense
+            :disable="index === orderedLayers.length - 1"
+            flat
+            icon="mmm-down"
+            round
+            size="sm"
+            @click="teoCamera.moveLayer(layer.id, 'down')"
+          />
+          <q-btn
+            :aria-label="
+              layer.hidden ? t('teo-layer-show') : t('teo-layer-hide')
+            "
+            dense
+            flat
+            :icon="layer.hidden ? 'mmm-file-hidden' : 'mmm-eye'"
+            round
+            size="sm"
+            @click="teoCamera.setLayerHidden(layer.id)"
+          />
+        </div>
+      </div>
+    </section>
+
     <div class="teo-camera-actions">
       <q-btn
         v-if="!studioMode"
@@ -537,8 +754,17 @@
 </template>
 
 <script setup lang="ts">
-import type { CaptureSource, TeoCameraLayout, TeoCameraScene } from 'src/types';
+import type {
+  CaptureSource,
+  MediaItem,
+  MediaSectionWithConfig,
+  TeoCameraLayout,
+  TeoCameraScene,
+  TeoLayerId,
+  TeoTransitionType,
+} from 'src/types';
 
+import { useBroadcastChannel, useEventListener } from '@vueuse/core';
 import { useTeoCameraLayouts } from 'src/composables/useTeoCameraLayouts';
 import { useTeoSceneLauncher } from 'src/composables/useTeoSceneLauncher';
 import { useTeoScreens } from 'src/composables/useTeoScreens';
@@ -550,6 +776,24 @@ import {
   TEO_CAMERA_MAX_ZOOM,
   teoCameraViewTransform,
 } from 'src/helpers/teo-camera-view';
+import {
+  resolveTeoMediaPlaybackUrl,
+  startTeoMediaProgram,
+  stopTeoMediaProgram,
+} from 'src/helpers/teo-media-program';
+import {
+  postTeoPreview,
+  TEO_COMMAND_CHANNEL,
+  type TeoStudioCommand,
+  type TeoStudioCommandMessage,
+} from 'src/helpers/teo-outputs';
+import {
+  normalizeTeoLayerOrder,
+  TEO_TRANSITION_DURATIONS,
+} from 'src/helpers/teo-studio-layers';
+import { sleep } from 'src/utils/general';
+import { isAudio, isImage, isVideo } from 'src/utils/media';
+import { formatTime } from 'src/utils/time';
 import { useCurrentStateStore } from 'stores/current-state';
 import { useTeoCameraStore } from 'stores/teo-camera';
 import { useTeoCaptureStore } from 'stores/teo-capture';
@@ -583,7 +827,7 @@ const cameraOnlyMode = computed(
 const studioMode = computed({
   get: () => teoCamera.studioMode,
   set: (enabled: boolean) => {
-    teoCamera.studioMode = enabled;
+    teoCamera.setStudioMode(enabled);
   },
 });
 
@@ -613,11 +857,33 @@ const previewVideo = useTemplateRef<HTMLVideoElement>('previewVideo');
 const capturePreviewVideo = useTemplateRef<HTMLVideoElement>(
   'capturePreviewVideo',
 );
+const mediaPreviewVideo = useTemplateRef<HTMLVideoElement>('mediaPreviewVideo');
 const previewStream = shallowRef<MediaStream | null>(null);
 const capturePreviewStream = shallowRef<MediaStream | null>(null);
 const previewError = ref('');
 const capturePreviewError = ref('');
-const studioPreviewKind = ref<'camera' | 'capture'>('camera');
+const studioPreviewKind = ref<'camera' | 'capture' | 'media'>('camera');
+const mediaPreviewId = ref('');
+const mediaPreviewUrl = ref('');
+
+const { data: lastEndTimestamp } = useBroadcastChannel<number, number>({
+  name: 'last-end-timestamp',
+});
+const { data: outputMediaDuration } = useBroadcastChannel<number, number>({
+  name: 'media-duration',
+});
+const { data: outputMediaTime } = useBroadcastChannel<number, number>({
+  name: 'current-time',
+});
+const { data: studioCommand } = useBroadcastChannel<
+  TeoStudioCommandMessage,
+  TeoStudioCommandMessage
+>({
+  name: TEO_COMMAND_CHANNEL,
+});
+const previewDuration = ref(0);
+const previewPosition = ref(0);
+
 const previewSceneId = ref<null | string>(null);
 const savingSnapshot = ref(false);
 const isPanning = ref(false);
@@ -646,10 +912,32 @@ const auxiliaryScreenLabel = computed(() =>
     : screenLabel(auxiliaryScreenIndex.value),
 );
 
-const activePreviewStream = computed(() =>
-  studioPreviewKind.value === 'capture'
-    ? capturePreviewStream.value
-    : previewStream.value,
+const activePreviewStream = computed(() => {
+  if (studioPreviewKind.value === 'capture') return capturePreviewStream.value;
+  if (studioPreviewKind.value === 'camera') return previewStream.value;
+  return null;
+});
+
+const mediaInPreview = computed(
+  () => studioPreviewKind.value === 'media' && !!mediaPreviewUrl.value,
+);
+
+const mediaPreviewIsImage = computed(() => isImage(mediaPreviewUrl.value));
+const mediaPreviewIsVideo = computed(() => isVideo(mediaPreviewUrl.value));
+const mediaPreviewIsAudio = computed(() => isAudio(mediaPreviewUrl.value));
+
+const mediaPreviewKind = computed<'audio' | 'image' | 'video'>(() => {
+  if (mediaPreviewIsImage.value) return 'image';
+  if (mediaPreviewIsAudio.value) return 'audio';
+  return 'video';
+});
+
+// A media item has no camera device behind it, so the placeholder must not
+// linger over the picture while the file loads.
+const previewHasSource = computed(() =>
+  studioPreviewKind.value === 'media'
+    ? !!mediaPreviewUrl.value && !mediaPreviewIsAudio.value
+    : !!activePreviewStream.value,
 );
 
 const cameraPreviewIsPaused = computed(
@@ -659,6 +947,9 @@ const cameraPreviewIsPaused = computed(
 );
 
 const previewPlaceholderText = computed(() => {
+  if (studioPreviewKind.value === 'media') {
+    return selectedMediaItem.value?.label ?? t('teo-media-empty');
+  }
   if (studioPreviewKind.value === 'capture') {
     if (capturePreviewError.value) return t('teo-camera-preview-unavailable');
     return t('teo-camera-preview-starting');
@@ -669,6 +960,7 @@ const previewPlaceholderText = computed(() => {
 });
 
 const previewPlaceholderIcon = computed(() => {
+  if (studioPreviewKind.value === 'media') return 'mmm-media';
   if (studioPreviewKind.value === 'capture')
     return 'mmm-media-display-inactive';
   return cameraPreviewIsPaused.value ? 'mmm-video' : 'mmm-video-off';
@@ -687,6 +979,83 @@ const captureSourceOptions = computed(() =>
     value: source.id,
   })),
 );
+
+interface MediaPreviewOption {
+  item: MediaItem;
+  label: string;
+  section: string;
+  value: string;
+}
+
+// Same naming the section picker uses: a custom or imported section without a
+// label is shown as "Imported media".
+const mediaSectionLabel = (section: MediaSectionWithConfig) => {
+  const config = section.config;
+  if (!config) return '';
+  const isImported =
+    config.uniqueId === 'imported-media' ||
+    config.uniqueId?.startsWith('custom-');
+  if (!config.label && isImported) return t('imported-media');
+  return config.label || t(config.uniqueId || ''); // NOSONAR: '' means not set
+};
+
+// The day's media as the meeting page lists it, so the studio previews the
+// same items the audience would get from the calendar.
+const mediaPreviewOptions = computed<MediaPreviewOption[]>(() => {
+  const sections = currentState.selectedDateObject?.mediaSections ?? [];
+  return sections.flatMap((section) => {
+    const sectionLabel = mediaSectionLabel(section);
+    return (section.items ?? [])
+      .filter((item) => !item.hidden && !!(item.fileUrl || item.streamUrl))
+      .map((item) => ({
+        item,
+        label: item.title,
+        section: sectionLabel,
+        value: item.uniqueId,
+      }));
+  });
+});
+
+const selectedMediaItem = computed(() =>
+  mediaPreviewOptions.value.find(
+    (option) => option.value === mediaPreviewId.value,
+  ),
+);
+
+const selectedMediaIndex = computed(() =>
+  mediaPreviewOptions.value.findIndex(
+    (option) => option.value === mediaPreviewId.value,
+  ),
+);
+
+// The whole meeting order, not just the picked item: the operator needs to see
+// what comes next while the current one is on air.
+const mediaQueue = computed(() => {
+  const liveId = currentState.mediaIsPlaying
+    ? currentState.mediaPlaying.uniqueId
+    : '';
+  return mediaPreviewOptions.value.map((option, index) => ({
+    ...option,
+    live: option.value === liveId,
+    next:
+      selectedMediaIndex.value !== -1 && index === selectedMediaIndex.value + 1,
+  }));
+});
+
+const selectedMediaPosition = computed(() => {
+  if (!mediaPreviewOptions.value.length) return '';
+  const position =
+    selectedMediaIndex.value === -1 ? '–' : selectedMediaIndex.value + 1;
+  return `${position} / ${mediaPreviewOptions.value.length}`;
+});
+
+const previewRemaining = computed(() => {
+  if (studioPreviewKind.value !== 'media' || !mediaPreviewIsVideo.value) {
+    return '';
+  }
+  if (previewDuration.value <= 0) return '';
+  return formatTime(Math.max(previewDuration.value - previewPosition.value, 0));
+});
 
 // Where the capture goes: the multimedia output unless another screen is
 // picked here.
@@ -748,6 +1117,29 @@ const selectedLayout = computed<TeoCameraLayout>({
     teoCamera.setSelectedLayout(layout);
   },
 });
+
+const transitionType = computed<TeoTransitionType>({
+  get: () => teoCamera.transitionType,
+  set: (type) => teoCamera.setTransition(type),
+});
+
+const transitionMs = computed<number>({
+  get: () => teoCamera.transitionMs,
+  set: (ms) => teoCamera.setTransition(teoCamera.transitionType, ms),
+});
+
+const transitionTypeOptions = computed(() => [
+  { label: t('teo-transition-cut'), value: 'cut' },
+  { label: t('teo-transition-fade'), value: 'fade' },
+  { label: t('teo-transition-slide'), value: 'slide' },
+]);
+
+const transitionDurationOptions = computed(() =>
+  TEO_TRANSITION_DURATIONS.map((ms) => ({
+    label: `${(ms / 1000).toFixed(1)} s`,
+    value: ms,
+  })),
+);
 
 const cameraView = computed(() => normalizeTeoCameraView(teoCamera.view));
 
@@ -875,6 +1267,7 @@ const activateScene = async (scene: TeoCameraScene) => {
     studioPreviewKind.value = 'camera';
     previewSceneId.value = scene.id;
     stopCapturePreview();
+    stopMediaPreview();
     stopPreview();
     void startPreview();
     createTemporaryNotification({
@@ -894,6 +1287,7 @@ const activateScene = async (scene: TeoCameraScene) => {
 const previewIsLive = computed(
   () =>
     !!activePreviewStream.value ||
+    mediaInPreview.value ||
     (!studioMode.value && !!teoCamera.activeCameraId),
 );
 
@@ -901,7 +1295,7 @@ const previewBadge = computed(() => {
   if (!studioMode.value && teoCamera.activeCameraId) {
     return t('teo-camera-on-screen');
   }
-  return activePreviewStream.value
+  return activePreviewStream.value || mediaInPreview.value
     ? t('teo-preview-live')
     : t('teo-preview-off');
 });
@@ -912,7 +1306,60 @@ const selectedCaptureSource = computed(() =>
   ),
 );
 
+/**
+ * Publishes what the preview is showing so the fullscreen multiview can show
+ * it too. The camera device belongs to a single window, so the multiview only
+ * receives this while it is open.
+ */
+const publishPreviewSource = () => {
+  if (studioPreviewKind.value === 'media') {
+    if (selectedMediaItem.value && mediaPreviewUrl.value) {
+      postTeoPreview({
+        kind: 'media',
+        label: selectedMediaItem.value.label,
+        mediaKind: mediaPreviewKind.value,
+        sourceId: selectedMediaItem.value.value,
+        url: mediaPreviewUrl.value,
+      });
+      return;
+    }
+    postTeoPreview({ kind: 'none', label: '', sourceId: '' });
+    return;
+  }
+
+  if (studioPreviewKind.value === 'capture' && selectedCaptureSourceId.value) {
+    postTeoPreview({
+      kind: 'capture',
+      label: selectedCaptureSource.value?.name ?? '',
+      sourceId: selectedCaptureSourceId.value,
+    });
+    return;
+  }
+
+  if (selectedCameraId.value) {
+    postTeoPreview({
+      kind: 'camera',
+      label: selectedCameraLabel.value,
+      sourceId: selectedCameraId.value,
+    });
+    return;
+  }
+
+  postTeoPreview({ kind: 'none', label: '', sourceId: '' });
+};
+
+/** Asks the multiview to let go of the camera before it goes on air. */
+const releaseMultiviewPreview = async () => {
+  if (!teoCamera.multiviewOpen) return;
+  postTeoPreview({ kind: 'none', label: '', sourceId: '' });
+  await sleep(400);
+};
+
 const previewHint = computed(() => {
+  if (studioPreviewKind.value === 'media') {
+    const item = selectedMediaItem.value;
+    return item ? `${item.label} · ${item.section}` : t('teo-media-empty');
+  }
   if (studioPreviewKind.value === 'capture') {
     if (capturePreviewError.value) return t('teo-camera-preview-unavailable');
     return selectedCaptureSource.value?.name ?? t('teo-preview-capture-hint');
@@ -923,28 +1370,52 @@ const previewHint = computed(() => {
   return selectedCameraLabel.value || t('teo-camera-preview');
 });
 
+const programIsMedia = computed(() => currentState.mediaIsPlaying);
+
+// The output window reports its position and duration; only videos and songs
+// have a running clock, so an image never shows a stale time.
+const programRemaining = computed(() => {
+  const url = currentState.mediaPlaying.url;
+  if (!programIsMedia.value || (!isVideo(url) && !isAudio(url))) return '';
+  const duration = outputMediaDuration.value ?? 0;
+  if (duration <= 0) return '';
+  const position = outputMediaTime.value ?? 0;
+  return formatTime(Math.max(duration - position, 0));
+});
+
 const programIsLive = computed(
-  () => !!teoCamera.activeCameraId || !!teoCapture.activeSourceId,
+  () =>
+    programIsMedia.value ||
+    !!teoCamera.activeCameraId ||
+    !!teoCapture.activeSourceId,
 );
 
 const programIsCapture = computed(() => !!teoCapture.activeSourceId);
 
+const programMediaTitle = computed(
+  () =>
+    mediaPreviewOptions.value.find(
+      (option) => option.value === currentState.mediaPlaying.uniqueId,
+    )?.label ?? t('teo-layer-media'),
+);
+
 const programIcon = computed(() => {
+  if (programIsMedia.value) return 'mmm-media';
   if (programIsCapture.value) return 'mmm-media-display-active';
   return teoCamera.activeCameraId ? 'mmm-video' : 'mmm-media-display-inactive';
 });
 
-const programLabel = computed(() =>
-  programIsCapture.value
-    ? teoCapture.activeSourceName
-    : teoCamera.activeCameraLabel,
-);
+const programLabel = computed(() => {
+  if (programIsMedia.value) return programMediaTitle.value;
+  if (programIsCapture.value) return teoCapture.activeSourceName;
+  return teoCamera.activeCameraLabel;
+});
 
-const programScreenIndex = computed(() =>
-  programIsCapture.value
-    ? teoCapture.activeScreenIndex
-    : teoCamera.activeScreenIndex,
-);
+const programScreenIndex = computed(() => {
+  if (programIsMedia.value) return preferredScreenIndex.value;
+  if (programIsCapture.value) return teoCapture.activeScreenIndex;
+  return teoCamera.activeScreenIndex;
+});
 
 const programScreenLabel = computed(() =>
   programScreenIndex.value === null
@@ -953,6 +1424,9 @@ const programScreenLabel = computed(() =>
 );
 
 const programHint = computed(() => {
+  if (programIsMedia.value) {
+    return t('teo-media-active', { media: programMediaTitle.value });
+  }
   if (programIsCapture.value) {
     return t('teo-capture-active', { source: teoCapture.activeSourceName });
   }
@@ -965,7 +1439,25 @@ const programHint = computed(() => {
   return t('teo-program-empty');
 });
 
+const canLoadMediaPreview = computed(() => !!selectedMediaItem.value);
+
+const mediaIsProgram = computed(
+  () =>
+    currentState.mediaIsPlaying &&
+    currentState.mediaPlaying.uniqueId === selectedMediaItem.value?.value,
+);
+
+// Taking the item that is already on air would restart it from the beginning;
+// another item can replace it while it plays, like changing the live source.
+const canTakeMedia = computed(
+  () =>
+    !!mediaPreviewUrl.value &&
+    !!selectedMediaItem.value &&
+    !mediaIsProgram.value,
+);
+
 const canGoOnAir = computed(() => {
+  if (studioPreviewKind.value === 'media') return canTakeMedia.value;
   if (currentState.mediaIsPlaying) return false;
   if (studioPreviewKind.value === 'capture') {
     return (
@@ -975,6 +1467,35 @@ const canGoOnAir = computed(() => {
   }
   return !!selectedCameraId.value && cameraScreenIndex.value !== null;
 });
+
+const LAYER_ICONS: Record<TeoLayerId, string> = {
+  camera: 'mmm-video',
+  capture: 'mmm-window',
+  media: 'mmm-media',
+  yeartext: 'mmm-yeartext',
+};
+
+const layerLabel = (id: TeoLayerId) => {
+  switch (id) {
+    case 'camera':
+      return t('teo-layer-camera');
+    case 'capture':
+      return t('teo-layer-capture');
+    case 'media':
+      return t('teo-layer-media');
+    default:
+      return t('teo-layer-yeartext');
+  }
+};
+
+const orderedLayers = computed(() =>
+  normalizeTeoLayerOrder(teoCamera.layerOrder).map((id) => ({
+    hidden: teoCamera.hiddenLayers.includes(id),
+    icon: LAYER_ICONS[id],
+    id,
+    label: layerLabel(id),
+  })),
+);
 
 const selectedScreenIndex = computed({
   get: () => cameraScreenIndex.value,
@@ -1031,6 +1552,32 @@ const stopCapturePreview = () => {
   }
 };
 
+const resetMediaPreviewClock = () => {
+  previewDuration.value = 0;
+  previewPosition.value = 0;
+};
+
+const stopMediaPreview = () => {
+  mediaPreviewUrl.value = '';
+  resetMediaPreviewClock();
+  mediaPreviewVideo.value?.pause();
+};
+
+const onMediaPreviewMetadata = () => {
+  const video = mediaPreviewVideo.value;
+  previewDuration.value =
+    video && Number.isFinite(video.duration) ? video.duration : 0;
+};
+
+const onMediaPreviewTimeUpdate = () => {
+  const video = mediaPreviewVideo.value;
+  if (!video) return;
+  previewPosition.value = video.currentTime;
+  if (!previewDuration.value && Number.isFinite(video.duration)) {
+    previewDuration.value = video.duration;
+  }
+};
+
 const isExpectedMediaError = (error: unknown) => {
   if (!(error instanceof DOMException)) return false;
   return (
@@ -1042,6 +1589,9 @@ const isExpectedMediaError = (error: unknown) => {
 
 const canRunCameraPreview = () => {
   if (currentState.mediaIsPlaying || !selectedCameraId.value) return false;
+  // While the multiview window is open it owns the camera device; the main
+  // window gets it back when that window closes.
+  if (teoCamera.multiviewOpen) return false;
   if (!studioMode.value) {
     return !teoCamera.activeCameraId && !teoCapture.activeSourceId;
   }
@@ -1092,6 +1642,7 @@ const startCapturePreview = async () => {
     !studioMode.value ||
     !sourceId ||
     currentState.mediaIsPlaying ||
+    teoCamera.multiviewOpen ||
     sourceId === teoCapture.activeSourceId
   ) {
     return;
@@ -1138,6 +1689,8 @@ const restartActivePreview = () => {
   if (studioMode.value && studioPreviewKind.value === 'capture') {
     return startCapturePreview();
   }
+  // A media preview owns no device, so there is nothing to reopen.
+  if (studioMode.value && studioPreviewKind.value === 'media') return;
   return startPreview();
 };
 
@@ -1252,6 +1805,7 @@ const detectCameras = async () => {
   previewSceneId.value = null;
   stopCapturePreview();
   stopPreview();
+  await releaseMultiviewPreview();
   detecting.value = true;
   try {
     // Requesting the camera once both unlocks friendly device labels and
@@ -1273,6 +1827,7 @@ const detectCameras = async () => {
   } finally {
     detecting.value = false;
     if (!teoCamera.activeCameraId) schedulePreviewRestart();
+    if (teoCamera.multiviewOpen) publishPreviewSource();
   }
 };
 
@@ -1303,7 +1858,7 @@ const loadCaptureSources = async () => {
   }
 };
 
-const startCapture = () => {
+const startCapture = async () => {
   const source = captureSources.value.find(
     (candidate) => candidate.id === selectedCaptureSourceId.value,
   );
@@ -1311,6 +1866,7 @@ const startCapture = () => {
   if (!source || screenIndex === null) return;
 
   stopPreview();
+  await releaseMultiviewPreview();
   if (!teoCapture.startCapture(source, screenIndex)) {
     schedulePreviewRestart();
     createTemporaryNotification({
@@ -1331,6 +1887,7 @@ const startCapture = () => {
 
 const stopCapture = () => {
   teoCapture.stopCapture();
+  if (teoCamera.multiviewOpen) publishPreviewSource();
 };
 
 const captureInPreview = computed(() => studioPreviewKind.value === 'capture');
@@ -1339,6 +1896,7 @@ const canLoadCapturePreview = computed(
   () =>
     studioMode.value &&
     !!selectedCaptureSourceId.value &&
+    !teoCamera.multiviewOpen &&
     !currentState.mediaIsPlaying &&
     selectedCaptureSourceId.value !== teoCapture.activeSourceId,
 );
@@ -1355,7 +1913,91 @@ const toggleCapturePreview = () => {
   studioPreviewKind.value = 'capture';
   previewSceneId.value = null;
   stopPreview();
+  stopMediaPreview();
   void startCapturePreview();
+};
+
+/**
+ * Loads the chosen item into the preview without starting it on the output.
+ * The preview reads the file itself, so the audience keeps seeing whatever is
+ * on the program until the take.
+ */
+const loadMediaPreview = async () => {
+  const option = selectedMediaItem.value;
+  if (!option) return;
+
+  previewSceneId.value = null;
+  stopPreview();
+  stopCapturePreview();
+  studioPreviewKind.value = 'media';
+  mediaPreviewUrl.value = '';
+  resetMediaPreviewClock();
+
+  const url = await resolveTeoMediaPlaybackUrl(option.item);
+  if (
+    studioPreviewKind.value !== 'media' ||
+    mediaPreviewId.value !== option.value
+  ) {
+    return;
+  }
+  mediaPreviewUrl.value = url;
+  publishPreviewSource();
+};
+
+/**
+ * Returns the preview to the camera. The multiview asks for this too, so the
+ * operator never has to go back to the main window just to recover it.
+ */
+const loadCameraPreview = () => {
+  previewSceneId.value = null;
+  stopCapturePreview();
+  stopMediaPreview();
+  studioPreviewKind.value = 'camera';
+  publishPreviewSource();
+  void startPreview();
+};
+
+const selectMediaOption = (value: string) => {
+  mediaPreviewId.value = value;
+  if (studioPreviewKind.value !== 'media') void loadMediaPreview();
+};
+
+const toggleMediaPreview = () => {
+  if (studioPreviewKind.value === 'media') {
+    loadCameraPreview();
+    return;
+  }
+  void loadMediaPreview();
+};
+const shiftMediaPreview = (step: number) => {
+  const options = mediaPreviewOptions.value;
+  if (!options.length) return;
+  const index = options.findIndex(
+    (option) => option.value === mediaPreviewId.value,
+  );
+  const nextIndex =
+    index === -1 ? 0 : (index + step + options.length) % options.length;
+  const option = options[nextIndex] ?? options[0];
+  if (!option) return;
+  mediaPreviewId.value = option.value;
+};
+
+const previewPreviousMedia = () => shiftMediaPreview(-1);
+
+const previewNextMedia = () => shiftMediaPreview(1);
+
+const takeMediaOnAir = () => {
+  const option = selectedMediaItem.value;
+  const url = mediaPreviewUrl.value;
+  if (!option || !url || !canTakeMedia.value) return;
+
+  teoCamera.postTakeTransition('media');
+  startTeoMediaProgram(option.item, url);
+  createTemporaryNotification({
+    icon: 'mmm-media',
+    message: t('teo-media-sent'),
+    type: 'positive',
+  });
 };
 
 const notifyMediaPlayingWarning = () => {
@@ -1367,7 +2009,12 @@ const notifyMediaPlayingWarning = () => {
   });
 };
 
-const goOnAir = () => {
+const goOnAir = async () => {
+  if (studioPreviewKind.value === 'media') {
+    takeMediaOnAir();
+    return;
+  }
+
   if (currentState.mediaIsPlaying) {
     notifyMediaPlayingWarning();
     return;
@@ -1381,6 +2028,8 @@ const goOnAir = () => {
     stopCapturePreview();
     stopPreview();
     if (teoCamera.activeCameraId) teoCamera.stopCameraProjection();
+    await releaseMultiviewPreview();
+    teoCamera.postTakeTransition('capture');
     if (!teoCapture.startCapture(source, screenIndex)) {
       schedulePreviewRestart();
       notifyMediaPlayingWarning();
@@ -1403,6 +2052,8 @@ const goOnAir = () => {
   stopCapturePreview();
   // The output window cannot open a camera the preview is still holding.
   stopPreview();
+  await releaseMultiviewPreview();
+  teoCamera.postTakeTransition('camera');
   const started = teoCamera.startCameraProjection(
     cameraId,
     selectedCameraLabel.value,
@@ -1422,18 +2073,59 @@ const goOnAir = () => {
 };
 
 const cutProgram = () => {
+  if (programIsMedia.value) {
+    stopTeoMediaProgram();
+    if (teoCamera.multiviewOpen) publishPreviewSource();
+    return;
+  }
   if (teoCapture.activeSourceId) teoCapture.stopCapture();
   if (teoCamera.activeCameraId) teoCamera.stopCameraProjection();
   schedulePreviewRestart();
+  if (teoCamera.multiviewOpen) publishPreviewSource();
 };
 
-const startProjection = () => {
+const loadCaptureInPreview = () => {
+  if (studioPreviewKind.value === 'capture') return;
+  if (!canLoadCapturePreview.value) return;
+  studioPreviewKind.value = 'capture';
+  previewSceneId.value = null;
+  stopPreview();
+  stopMediaPreview();
+  void startCapturePreview();
+};
+
+const runStudioCommand = (action: TeoStudioCommand) => {
+  if (!studioMode.value) return;
+  switch (action) {
+    case 'cut':
+      cutProgram();
+      return;
+    case 'preview-camera':
+      loadCameraPreview();
+      return;
+    case 'preview-capture':
+      loadCaptureInPreview();
+      return;
+    case 'preview-next':
+      if (studioPreviewKind.value === 'media') previewNextMedia();
+      return;
+    case 'preview-previous':
+      if (studioPreviewKind.value === 'media') previewPreviousMedia();
+      return;
+    case 'take':
+      void goOnAir();
+      return;
+  }
+};
+
+const startProjection = async () => {
   const screenIndex = cameraScreenIndex.value;
   if (!selectedCameraId.value || screenIndex === null) return;
 
   teoCapture.stopCapture();
   // The output window cannot open a camera the preview is still holding.
   stopPreview();
+  await releaseMultiviewPreview();
   const started = teoCamera.startCameraProjection(
     selectedCameraId.value,
     selectedCameraLabel.value,
@@ -1456,12 +2148,49 @@ const startProjection = () => {
 
 const stopProjection = () => {
   teoCamera.stopCameraProjection();
+  if (teoCamera.multiviewOpen) publishPreviewSource();
 };
 
 const showOutput = () => {
   teoCamera.stopCameraProjection();
   teoCapture.stopCapture();
   activateOutput();
+};
+
+const isTypingTarget = (target: EventTarget | null) => {
+  if (!(target instanceof HTMLElement)) return false;
+  return !!target.closest('input, textarea, select, [contenteditable="true"]');
+};
+
+// vMix-style operation: the operator takes, cuts and steps the preview without
+// aiming at a button. Only while studio mode is on, and never while a dialog,
+// a menu or a text field is waiting for the keyboard.
+const onStudioShortcut = (event: KeyboardEvent) => {
+  if (!studioMode.value || isTypingTarget(event.target)) return;
+  if (document.querySelector('.q-dialog, .q-menu')) return;
+
+  switch (event.key) {
+    case 'ArrowLeft':
+      if (studioPreviewKind.value !== 'media') return;
+      event.preventDefault();
+      previewPreviousMedia();
+      return;
+    case 'ArrowRight':
+      if (studioPreviewKind.value !== 'media') return;
+      event.preventDefault();
+      previewNextMedia();
+      return;
+    case 'Delete':
+      event.preventDefault();
+      cutProgram();
+      return;
+    case 'Enter':
+      event.preventDefault();
+      void goOnAir();
+      return;
+    default:
+      return;
+  }
 };
 
 watch(studioMode, (enabled) => {
@@ -1473,7 +2202,43 @@ watch(studioMode, (enabled) => {
 
   studioPreviewKind.value = 'camera';
   stopCapturePreview();
+  stopMediaPreview();
   if (!previewStream.value) schedulePreviewRestart();
+});
+
+watch(mediaPreviewId, () => {
+  if (studioPreviewKind.value !== 'media') return;
+  void loadMediaPreview();
+});
+
+// Keep the picker on a real item when the selected day changes or the list is
+// refreshed from the meeting page.
+watch(
+  mediaPreviewOptions,
+  (options) => {
+    if (options.some((option) => option.value === mediaPreviewId.value)) {
+      return;
+    }
+    mediaPreviewId.value = options[0]?.value ?? '';
+  },
+  { immediate: true },
+);
+
+watch(studioCommand, (message) => {
+  if (!message) return;
+  runStudioCommand(message.action);
+});
+
+useEventListener(globalThis, 'keydown', onStudioShortcut);
+
+// This page replaces the meeting page, so while it is open nothing else clears
+// the program when a taken video ends. Without this the output would keep the
+// last frame and the panel would still claim media is on air. The operator's
+// preview goes back to the camera so the next take starts from a live shot.
+watch(lastEndTimestamp, (timestamp) => {
+  if (!timestamp || !studioMode.value || !currentState.mediaIsPlaying) return;
+  stopTeoMediaProgram();
+  loadCameraPreview();
 });
 
 watch(selectedCameraId, () => {
@@ -1543,6 +2308,25 @@ watch(
       return;
     }
     schedulePreviewRestart();
+  },
+);
+
+// The multiview shows the same preview on its own window. It owns the camera
+// while it is open, so this window stops its streams and publishes the source
+// for it; when the window closes the preview comes back here.
+watch([studioPreviewKind, selectedCameraId, selectedCaptureSourceId], () => {
+  publishPreviewSource();
+});
+
+watch(
+  () => teoCamera.multiviewOpen,
+  (open) => {
+    if (open) {
+      stopPreview();
+      stopCapturePreview();
+    }
+    publishPreviewSource();
+    if (!open) schedulePreviewRestart();
   },
 );
 
@@ -1668,6 +2452,14 @@ onBeforeUnmount(() => {
   font-size: 0.72rem;
 }
 
+.teo-program-screen__time {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  padding: 2px 8px;
+}
+
 .teo-studio-buttons {
   display: flex;
   gap: 8px;
@@ -1675,6 +2467,50 @@ onBeforeUnmount(() => {
 
 .teo-studio-buttons .q-btn {
   flex: 1 1 0;
+}
+
+.teo-transition {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.teo-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.teo-layer {
+  align-items: center;
+  background: rgba(12, 52, 60, 0.035);
+  border-radius: 10px;
+  display: flex;
+  gap: 6px;
+  padding: 4px 8px;
+}
+
+.teo-layer > .q-icon {
+  color: var(--q-primary);
+}
+
+.teo-layer__name {
+  color: #0c1a24;
+  flex: 1 1 auto;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teo-layer--hidden {
+  opacity: 0.55;
+}
+
+.teo-layer--hidden .teo-layer__name {
+  text-decoration: line-through;
 }
 
 .teo-camera-panel__row {
@@ -1770,6 +2606,106 @@ onBeforeUnmount(() => {
   object-fit: cover;
   transform-origin: center center;
   width: 100%;
+}
+
+/* Media keeps its aspect ratio in the preview, like on the output screen. */
+.teo-camera-preview__media {
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.teo-camera-preview__time {
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  bottom: 10px;
+  color: #fff;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  padding: 3px 10px;
+  position: absolute;
+  right: 10px;
+}
+
+.teo-media-picker {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.teo-media-picker__count {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.teo-media-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.teo-media-queue__item {
+  align-items: center;
+  background: rgba(12, 52, 60, 0.04);
+  border: 1px solid rgba(12, 52, 60, 0.12);
+  border-radius: 8px;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 0 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.teo-media-queue__item:hover {
+  background: rgba(29, 95, 168, 0.08);
+}
+
+.teo-media-queue__item.is-selected {
+  border-color: rgba(29, 95, 168, 0.55);
+  background: rgba(29, 95, 168, 0.12);
+}
+
+.teo-media-queue__item.is-live {
+  box-shadow: inset 3px 0 0 #21ba45;
+}
+
+.teo-media-queue__title {
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teo-media-queue__meta {
+  color: rgba(12, 52, 60, 0.6);
+  font-size: 0.7rem;
+  grid-column: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teo-media-queue__tag {
+  background: rgba(29, 95, 168, 0.14);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.teo-media-queue__item.is-live .teo-media-queue__tag {
+  background: rgba(33, 186, 69, 0.16);
+  color: #0d7a33;
 }
 
 .teo-camera-preview__placeholder {
@@ -1983,6 +2919,14 @@ body.body--dark .teo-camera-card--program {
 
 body.body--dark .teo-camera-card--program-live {
   border-color: rgba(248, 113, 113, 0.5);
+}
+
+body.body--dark .teo-layer {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+body.body--dark .teo-layer__name {
+  color: #f4fbfa;
 }
 
 @media (max-width: 1180px) {

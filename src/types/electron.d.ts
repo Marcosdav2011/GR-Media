@@ -343,6 +343,7 @@ export interface ElectronApi {
   onMediaWindowRendererGone: (
     callback: (args: { reloading: boolean }) => void,
   ) => void;
+  onMultiviewWindowClosed: (callback: () => void) => () => void;
   onPathProbeNetworkWarning: (callback: () => void) => void;
   onShortcut: (
     callback: (args: { shortcut: keyof SettingsValues }) => void,
@@ -471,6 +472,7 @@ export interface ElectronApi {
     windowedMode?: boolean,
   ) => void;
   toggleMediaWindow: (show: boolean, enableFadeTransitions?: boolean) => void;
+  toggleMultiviewWindow: (show: boolean) => void;
   toggleTimerWindow: (show: boolean) => void;
   unregisterAllShortcuts: () => void;
   unregisterShortcut: (shortcut: string) => void;
@@ -624,6 +626,7 @@ export type ElectronIpcListenKey =
   | 'hardware-acceleration-temporary-disabled'
   | 'log'
   | 'media-window-renderer-gone'
+  | 'multiviewWindowClosed'
   | 'pathProbeNetworkWarning'
   | 'screenChange'
   | 'screenPrefsChange'
@@ -670,6 +673,7 @@ export type ElectronIpcSendKey =
   | 'timerRemoteUpdate'
   | 'toggleAuxiliaryWindow'
   | 'toggleMediaWindow'
+  | 'toggleMultiviewWindow'
   | 'toggleOpenAtLogin'
   | 'toggleTimerWindow'
   | 'toggleWebsiteWindow'

@@ -18,7 +18,9 @@ vi.mock('src/helpers/teo-outputs', () => ({
   postTeoCamera: vi.fn(),
   postTeoCameraLayout: vi.fn(),
   postTeoCameraView: vi.fn(),
+  postTeoLayerState: vi.fn(),
   postTeoScreenIdentify: vi.fn(),
+  postTeoTransition: vi.fn(),
 }));
 
 installPinia({ stubActions: false });
@@ -399,6 +401,39 @@ describe('teo-camera store', () => {
     const scene = store.addScene('Pulpit');
 
     expect(scene?.screenIndex).toBe(2);
+  });
+
+  it('opens the multiview window once and follows its close', () => {
+    const toggleMultiviewWindow = vi.fn();
+    globalThis.electronApi.toggleMultiviewWindow = toggleMultiviewWindow;
+    const store = useTeoCameraStore();
+
+    store.setMultiviewOpen(true);
+    store.setMultiviewOpen(true);
+    expect(toggleMultiviewWindow).toHaveBeenCalledTimes(1);
+    expect(toggleMultiviewWindow).toHaveBeenCalledWith(true);
+    expect(store.multiviewOpen).toBe(true);
+
+    store.handleMultiviewClosed();
+    expect(store.multiviewOpen).toBe(false);
+  });
+
+  it('restores every layer when studio mode is turned off', () => {
+    const store = useTeoCameraStore();
+    store.setStudioMode(true);
+    store.moveLayer('camera', 'up');
+    store.setLayerHidden('yeartext');
+    expect(store.hiddenLayers).toEqual(['yeartext']);
+
+    store.setStudioMode(false);
+
+    expect(store.layerOrder).toEqual([
+      'media',
+      'capture',
+      'camera',
+      'yeartext',
+    ]);
+    expect(store.hiddenLayers).toEqual([]);
   });
 
   it('updates scenes with the assigned camera screen while idle', () => {

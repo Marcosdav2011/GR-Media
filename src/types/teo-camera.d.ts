@@ -25,3 +25,9 @@ export interface TeoCameraView {
   panY: number;
   zoom: number;
 }
+
+/** Sources the studio can show, hide and reorder on the output. */
+export type TeoLayerId = 'camera' | 'capture' | 'media' | 'yeartext';
+
+/** How a preview take reaches the program output. */
+export type TeoTransitionType = 'cut' | 'fade' | 'slide';

@@ -191,81 +191,6 @@
               </div>
 
               <div
-                v-if="groupId === 'advanced'"
-                class="subgroup-card subgroup-card--global"
-              >
-                <q-item-label class="settings-subgroup-label" header>
-                  <q-icon class="q-mr-xs" name="mmm-groups" size="14px" />
-                  {{ t('global-preferences') }}
-                </q-item-label>
-                <div class="settings-global-note">
-                  {{ t('global-preferences-explain') }}
-                </div>
-                <q-item
-                  id="autoUpdateApp"
-                  class="rounded-borders"
-                  :style="$q.screen.lt.sm ? 'flex-direction: column' : ''"
-                  tag="label"
-                >
-                  <q-item-section>
-                    <q-item-label>{{ t('auto-update-app') }}</q-item-label>
-                    <q-item-label
-                      caption
-                      :class="{ 'q-pb-sm': $q.screen.lt.sm }"
-                    >
-                      {{ t('auto-update-app-explain') }}
-                    </q-item-label>
-                  </q-item-section>
-                  <q-item-section
-                    side
-                    :style="
-                      ($q.screen.lt.sm ? 'padding-left: 0' : '') +
-                      ';align-items: end'
-                    "
-                  >
-                    <q-toggle
-                      v-model="autoUpdateEnabled"
-                      checked-icon="mmm-check"
-                      :color="autoUpdateEnabled ? 'primary' : 'negative'"
-                      keep-color
-                      name="autoUpdateApp"
-                    />
-                  </q-item-section>
-                </q-item>
-                <q-item
-                  v-if="autoUpdateEnabled"
-                  id="receiveBetaUpdates"
-                  class="rounded-borders"
-                  :style="$q.screen.lt.sm ? 'flex-direction: column' : ''"
-                  tag="label"
-                >
-                  <q-item-section>
-                    <q-item-label>{{ t('receive-beta-updates') }}</q-item-label>
-                    <q-item-label
-                      caption
-                      :class="{ 'q-pb-sm': $q.screen.lt.sm }"
-                    >
-                      {{ t('receive-beta-updates-explain') }}
-                    </q-item-label>
-                  </q-item-section>
-                  <q-item-section
-                    side
-                    :style="
-                      ($q.screen.lt.sm ? 'padding-left: 0' : '') +
-                      ';align-items: end'
-                    "
-                  >
-                    <q-toggle
-                      v-model="betaUpdatesEnabled"
-                      checked-icon="mmm-check"
-                      color="negative"
-                      name="receiveBetaUpdates"
-                    />
-                  </q-item-section>
-                </q-item>
-              </div>
-
-              <div
                 v-for="run in getGroupRuns(groupId)"
                 :key="`${groupId}-${run.subgroup ?? 'none'}-${run.items[0]?.[0]}`"
                 class="subgroup-card"
@@ -430,12 +355,6 @@ import { errorCatcher } from 'src/helpers/error-catcher';
 import { getRendererPlatform } from 'src/helpers/fs';
 import { createTemporaryNotification } from 'src/helpers/notifications';
 import { localeOptions } from 'src/i18n';
-import {
-  betaUpdatesDisabled,
-  toggleAutoUpdates,
-  toggleBetaUpdates,
-  updatesDisabled,
-} from 'src/utils/fs';
 import { getObsSceneField } from 'src/utils/obs-scene';
 import {
   exportProfileSettingsToFile,
@@ -477,26 +396,6 @@ const settingsFilter = ref<null | string | undefined>('');
 const settingsFilterInput = useTemplateRef<QInput>('settingsFilterInput');
 const settingsFilterVisible = ref(false);
 let settingsFilterClosedAt = 0;
-
-// Global preferences (auto-update / beta updates) are app-wide, not part of
-// any congregation profile - they live as filesystem marker files read via
-// IPC (src/utils/fs.ts), not in currentSettings, so they can't be driven by
-// the normal settingsDefinitions/BaseInput v-model pattern.
-const autoUpdateEnabled = ref(true);
-const betaUpdatesEnabled = ref(false);
-
-// Set while loadGlobalPreferences() syncs the refs above from disk, so the
-// watch(betaUpdatesEnabled, ...) below can tell a user-initiated toggle
-// apart from that initial sync and only warn on the former.
-let isSyncingGlobalPreferences = false;
-
-const loadGlobalPreferences = async () => {
-  isSyncingGlobalPreferences = true;
-  autoUpdateEnabled.value = !(await updatesDisabled());
-  betaUpdatesEnabled.value = !(await betaUpdatesDisabled());
-  await nextTick();
-  isSyncingGlobalPreferences = false;
-};
 
 const openCongregationLookup = () => {
   showCongregationLookup.value = true;
@@ -554,7 +453,6 @@ const stopSpaceForEditableTarget = (event: KeyboardEvent) => {
 
 onMounted(() => {
   globalThis.addEventListener('openCongregationLookup', openCongregationLookup);
-  void loadGlobalPreferences();
 });
 
 onBeforeUnmount(() => {
@@ -1022,15 +920,6 @@ const settingParam = useRouteParams<keyof SettingsValues | undefined>(
   'setting',
 );
 
-// Global preferences (see loadGlobalPreferences below) aren't part of
-// settingsDefinitions, so the /settings/:setting deep-link below can't
-// resolve their group from there - map their ids (which match the elements'
-// DOM ids in the template) to the group that hosts them instead.
-const GLOBAL_PREFERENCE_GROUPS: Partial<Record<string, SettingsGroupKey>> = {
-  autoUpdateApp: 'advanced',
-  receiveBetaUpdates: 'advanced',
-};
-
 const invalidSettings = computed(() => getInvalidSettings());
 const invalidSettingsLength = computed(() => invalidSettings.value?.length > 0);
 
@@ -1059,9 +948,7 @@ whenever(
   settingParam,
   (setting) => {
     if (setting) {
-      const group =
-        settingsDefinitions[setting]?.group ??
-        GLOBAL_PREFERENCE_GROUPS[setting];
+      const group = settingsDefinitions[setting]?.group;
       if (group) selectGroup(group);
     }
     setTimeout(() => {
@@ -1086,45 +973,6 @@ watch(
       online: online.value,
     }),
 );
-
-let dismissUpdatesDisabledWarning: (() => void) | undefined;
-
-watch(autoUpdateEnabled, (enabled) => {
-  void toggleAutoUpdates(enabled);
-
-  if (isSyncingGlobalPreferences) return;
-
-  if (enabled) {
-    dismissUpdatesDisabledWarning?.();
-    dismissUpdatesDisabledWarning = undefined;
-  } else {
-    dismissUpdatesDisabledWarning = createTemporaryNotification({
-      message: t('updates-disabled-warning'),
-      timeout: 10_000,
-      type: 'info',
-    });
-  }
-});
-
-let dismissBetaUpdatesWarning: (() => void) | undefined;
-
-watch(betaUpdatesEnabled, (enabled) => {
-  void toggleBetaUpdates(enabled);
-
-  if (isSyncingGlobalPreferences) return;
-
-  if (enabled) {
-    dismissBetaUpdatesWarning = createTemporaryNotification({
-      caption: t('receive-beta-updates-explain'),
-      message: t('beta-updates-are-dangerous'),
-      timeout: 10_000,
-      type: 'warning',
-    });
-  } else {
-    dismissBetaUpdatesWarning?.();
-    dismissBetaUpdatesWarning = undefined;
-  }
-});
 </script>
 
 <style scoped>

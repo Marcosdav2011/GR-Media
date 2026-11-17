@@ -1,12 +1,10 @@
 import type {
-  Announcement,
   JwLangCode,
   JwLanguageResult,
   MediaItemsMediator,
   Publication,
   PublicationFetcher,
   PublicationFiles,
-  Release,
 } from 'src/types';
 
 import { errorCatcher } from 'src/helpers/error-catcher';
@@ -15,7 +13,6 @@ import { isFetchNetworkError } from 'src/shared/network-errors';
 import { log } from 'src/shared/vanilla';
 import { addToDate, dateFromString, isInPast } from 'src/utils/date';
 import { withFetchRetry } from 'src/utils/fetch-retry';
-import { betaUpdatesDisabled } from 'src/utils/fs';
 import { isDemoModeActive } from 'stores/demo-mode';
 
 const MAX_CACHED_RESPONSE_BYTES = 1024 * 1024;
@@ -397,18 +394,6 @@ export const fetchYeartext = async (
 };
 
 /**
- * Fetches the announcements from the repository.
- * @returns The announcements.
- */
-export const fetchAnnouncements = async (): Promise<Announcement[]> => {
-  if (!import.meta.env.repository) return [];
-  const result = await fetchJson<Announcement[]>(
-    `${import.meta.env.repository?.replace('github', 'raw.githubusercontent')}/refs/heads/master/announcements.json`,
-  );
-  return result?.filter((a) => !!a.id && !!a.message) || [];
-};
-
-/**
  * Fetches the memorial dates from the repository.
  * @returns The memorial dates.
  */
@@ -481,18 +466,6 @@ export const fetchReleaseNotes = async (
     if (!isFetchNetworkError(e)) errorCatcher(e);
     return null;
   }
-};
-
-/**
- * Fetches the latest version of the app.
- * @returns The latest version.
- */
-export const fetchLatestVersion = async () => {
-  if (!import.meta.env.repository) return;
-  const url = `${import.meta.env.repository.replace('github.com', 'api.github.com/repos')}/releases`;
-  const includeBeta = !(await betaUpdatesDisabled());
-  const result = await fetchJson<Release[]>(url);
-  return result?.find((r) => includeBeta || !r.prerelease)?.tag_name.slice(1);
 };
 
 /**

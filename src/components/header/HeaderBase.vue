@@ -19,19 +19,6 @@
         </q-tooltip>
       </button>
 
-      <q-btn
-        v-if="updatesAreDisabled"
-        class="teo-header__warning"
-        color="warning"
-        flat
-        round
-        size="sm"
-        @click="openUpdateSettings"
-      >
-        <q-icon name="mmm-updates-disabled" />
-        <q-tooltip :delay="500">{{ t('updates-disabled-warning') }}</q-tooltip>
-      </q-btn>
-
       <div class="teo-header__spacer" />
 
       <div class="teo-header__status">
@@ -126,11 +113,10 @@ import ActionIsland from 'components/ui/ActionIsland.vue';
 import { storeToRefs } from 'pinia';
 import { QHeader } from 'quasar';
 import { createTemporaryNotification } from 'src/helpers/notifications';
-import { updatesDisabled } from 'src/utils/fs';
 import { useCongregationSettingsStore } from 'stores/congregation-settings';
 import { useCurrentStateStore } from 'stores/current-state';
 import { type DemoMeetingStage, useDemoModeStore } from 'stores/demo-mode';
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -182,8 +168,6 @@ const updateVirtualClock = () => {
 const { pause, resume } = useIntervalFn(updateVirtualClock, 1000, {
   immediate: false,
 });
-
-const updatesAreDisabled = ref(false);
 
 // The page area is offset by the header's real height, and the action bar
 // makes it taller than the base two rows, so keep the CSS variable in sync as
@@ -305,14 +289,6 @@ const openProfileSwitcher = () => {
   currentState.openCongregationSwitcher();
 };
 
-const openUpdateSettings = () => {
-  void router.push('/settings/autoUpdateApp');
-};
-
-const handleAutoUpdatesToggled = (event: Event) => {
-  updatesAreDisabled.value = !(event as CustomEvent<boolean>).detail;
-};
-
 // Keep the page offset in step with the header's measured height.
 watch(headerHeight, (height) => {
   if (height > 0) {
@@ -336,18 +312,6 @@ watch(
   },
   { immediate: true },
 );
-
-onMounted(async () => {
-  updatesAreDisabled.value = await updatesDisabled();
-  globalThis.addEventListener('autoUpdatesToggled', handleAutoUpdatesToggled);
-});
-
-onBeforeUnmount(() => {
-  globalThis.removeEventListener(
-    'autoUpdatesToggled',
-    handleAutoUpdatesToggled,
-  );
-});
 </script>
 
 <style lang="scss" scoped>

@@ -7,6 +7,7 @@ import { postTeoScreenIdentify } from 'src/helpers/teo-outputs';
 import { useAppSettingsStore } from 'stores/app-settings';
 import { useCurrentStateStore } from 'stores/current-state';
 import { useTeoCameraStore } from 'stores/teo-camera';
+import { useTeoCaptureStore } from 'stores/teo-capture';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
@@ -84,6 +85,7 @@ beforeEach(() => {
   useCurrentStateStore().mediaPlaying.url = '';
   useAppSettingsStore().screenPreferences.preferredScreenNumber = 0;
   useTeoCameraStore().$reset();
+  useTeoCaptureStore().$reset();
 });
 
 describe('useTeoScreens', () => {
@@ -198,6 +200,40 @@ describe('useTeoScreens', () => {
     expect(toggleAuxiliaryWindowMock).toHaveBeenCalledWith(true, 0);
   });
 
+  it('moves the mirror off the screen a running camera fills', async () => {
+    const { teo } = await mountComposable();
+    const teoCamera = useTeoCameraStore();
+
+    expect(teo.auxiliaryScreenIndex.value).toBe(2);
+
+    teoCamera.activeCameraId = 'camera-1';
+    teoCamera.activeScreenIndex = 2;
+
+    expect(teo.auxiliaryScreenIndex.value).toBe(0);
+    expect(teo.activateAuxiliaryOutput()).toBe(0);
+    expect(toggleAuxiliaryWindowMock).toHaveBeenCalledWith(true, 0);
+
+    // The camera's screen is covered by the opaque media window, so it must
+    // never be used for the mirror.
+    teo.activateAuxiliaryOutput(2);
+    expect(toggleAuxiliaryWindowMock).toHaveBeenCalledTimes(1);
+
+    teoCamera.activeCameraId = null;
+    expect(teo.auxiliaryScreenIndex.value).toBe(2);
+  });
+
+  it('moves the mirror off the screen a running capture fills', async () => {
+    const { teo } = await mountComposable();
+    const teoCapture = useTeoCaptureStore();
+
+    teoCapture.activeSourceId = 'source-1';
+    teoCapture.activeScreenIndex = 2;
+
+    expect(teo.auxiliaryScreenIndex.value).toBe(0);
+    expect(teo.activateAuxiliaryOutput()).toBe(0);
+    expect(toggleAuxiliaryWindowMock).toHaveBeenCalledWith(true, 0);
+  });
+
   it('has no second output with only one external screen', async () => {
     getAllScreensMock.mockResolvedValue([
       display(2, -1920, 0, 1920, 1080, false, 2),
@@ -211,10 +247,10 @@ describe('useTeoScreens', () => {
     expect(toggleAuxiliaryWindowMock).not.toHaveBeenCalled();
   });
 
-  it('assigns the camera to the other external screen by default', async () => {
+  it('assigns the camera to the multimedia screen by default', async () => {
     const { teo } = await mountComposable();
 
-    expect(teo.cameraScreenIndex.value).toBe(2);
+    expect(teo.cameraScreenIndex.value).toBe(0);
   });
 
   it('keeps the camera screen separate from the multimedia screen', async () => {
@@ -222,11 +258,11 @@ describe('useTeoScreens', () => {
     const appSettings = useAppSettingsStore();
     const teoCamera = useTeoCameraStore();
 
-    expect(teo.cameraScreenIndex.value).toBe(2);
+    expect(teo.cameraScreenIndex.value).toBe(0);
 
-    teo.setCameraScreen(0);
+    teo.setCameraScreen(2);
 
-    expect(teoCamera.preferredCameraScreen).toBe(0);
+    expect(teoCamera.preferredCameraScreen).toBe(2);
     expect(teoCamera.preferredOutputScreen).toBeNull();
     expect(appSettings.screenPreferences.preferredScreenNumber).toBe(0);
   });

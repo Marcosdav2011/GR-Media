@@ -9,6 +9,7 @@ import { withTimeout } from 'src/utils/general';
 import { useAppSettingsStore } from 'stores/app-settings';
 import { useCurrentStateStore } from 'stores/current-state';
 import { useTeoCameraStore } from 'stores/teo-camera';
+import { useTeoCaptureStore } from 'stores/teo-capture';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -27,6 +28,7 @@ export const useTeoScreens = () => {
   const appSettings = useAppSettingsStore();
   const currentState = useCurrentStateStore();
   const teoCamera = useTeoCameraStore();
+  const teoCapture = useTeoCaptureStore();
   const { screenPreferences } = storeToRefs(appSettings);
 
   const { getAllScreens, moveMediaWindow } = globalThis.electronApi;
@@ -74,14 +76,29 @@ export const useTeoScreens = () => {
   });
 
   /**
+   * The screen the media window is showing on right now: the camera or the
+   * capture when either is on air, and the multimedia screen otherwise. Both
+   * share one window, so this is what the mirror must stay clear of.
+   */
+  const activeOutputScreenIndex = computed(() => {
+    if (!currentState.mediaIsPlaying) {
+      if (teoCamera.activeCameraId) return teoCamera.activeScreenIndex;
+      if (teoCapture.activeSourceId) return teoCapture.activeScreenIndex;
+    }
+    return preferredScreenIndex.value;
+  });
+
+  /**
    * The other external screen. TEO mirrors visual media there so both room
-   * monitors always show content; the camera keeps using the primary output.
+   * monitors always show content. It follows whichever screen the output
+   * window currently fills, so a camera or capture on the second screen
+   * pushes the mirror to the remaining one instead of hiding under it.
    */
   const auxiliaryScreenIndex = computed(() => {
-    const primary = preferredScreenIndex.value;
+    const active = activeOutputScreenIndex.value;
     const available = outputScreens.value;
     if (available.length < 2) return null;
-    return available.find(({ index }) => index !== primary)?.index ?? null;
+    return available.find(({ index }) => index !== active)?.index ?? null;
   });
 
   const hasAuxiliaryScreen = computed(
@@ -91,8 +108,8 @@ export const useTeoScreens = () => {
   /**
    * The screen the camera opens on. It is assigned separately from the
    * multimedia screen in the display settings, so both can stay fixed across
-   * sessions. Until the user assigns one, the camera uses the other external
-   * screen (or the only output screen).
+   * sessions. Until the user assigns one, the camera uses the multimedia
+   * screen, where the main output already is.
    */
   const cameraScreenIndex = computed(() => {
     const available = outputScreens.value;
@@ -101,11 +118,7 @@ export const useTeoScreens = () => {
     const configured = available.find(
       ({ index }) => index === teoCamera.preferredCameraScreen,
     );
-    return (
-      configured?.index ??
-      auxiliaryScreenIndex.value ??
-      preferredScreenIndex.value
-    );
+    return configured?.index ?? preferredScreenIndex.value;
   });
 
   const screenNumber = (index: number) =>
@@ -248,7 +261,9 @@ export const useTeoScreens = () => {
 
     const screen = screens.value[index];
     if (!screen || screen.mainWindow) return null;
-    if (index === preferredScreenIndex.value) return null;
+    // Never share the screen the output window itself fills: the mirror would
+    // be hidden behind it.
+    if (index === activeOutputScreenIndex.value) return null;
 
     globalThis.electronApi.toggleAuxiliaryWindow(true, index);
     return index;
@@ -343,6 +358,7 @@ export const useTeoScreens = () => {
   return {
     activateAuxiliaryOutput,
     activateOutput,
+    activeOutputScreenIndex,
     auxiliaryScreenIndex,
     cameraScreenIndex,
     fetchScreens,

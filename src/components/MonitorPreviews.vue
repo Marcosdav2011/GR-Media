@@ -38,10 +38,10 @@
 </template>
 
 <script setup lang="ts">
-import type { MonitorPreview, MonitorPreviewRole } from 'src/types';
+import type { MonitorPreviewRole } from 'src/types';
 
-import { errorCatcher } from 'src/helpers/error-catcher';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useMonitorPreviews } from 'src/composables/useMonitorPreviews';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 // A still frame every second is enough to confirm what each screen shows,
@@ -56,9 +56,7 @@ const ROLE_ICONS: Record<MonitorPreviewRole, string> = {
 };
 
 const { t } = useI18n();
-const previews = ref<MonitorPreview[]>([]);
-let refreshTimer: ReturnType<typeof setInterval> | undefined;
-let refreshing = false;
+const { previews } = useMonitorPreviews(PREVIEW_REFRESH_MS);
 
 const roleLabel = (role: MonitorPreviewRole) => {
   switch (role) {
@@ -84,31 +82,6 @@ const tiles = computed(() =>
         : t('teo-screen', { number: preview.displayNumber }),
   })),
 );
-
-const refresh = async () => {
-  if (refreshing || document.hidden) return;
-  refreshing = true;
-  try {
-    previews.value = await globalThis.electronApi.getMonitorPreviews();
-  } catch (error) {
-    errorCatcher(error, {
-      contexts: { fn: { name: 'MonitorPreviews.refresh' } },
-    });
-  } finally {
-    refreshing = false;
-  }
-};
-
-onMounted(() => {
-  void refresh();
-  refreshTimer = setInterval(() => void refresh(), PREVIEW_REFRESH_MS);
-  document.addEventListener('visibilitychange', refresh);
-});
-
-onUnmounted(() => {
-  if (refreshTimer) clearInterval(refreshTimer);
-  document.removeEventListener('visibilitychange', refresh);
-});
 </script>
 
 <style scoped>

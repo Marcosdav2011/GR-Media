@@ -14,6 +14,7 @@
       v-if="!mediaPlayerCustomBackground && !cameraIsFullScreen"
       class="base-layer"
       :class="baseLayerClasses"
+      :style="{ zIndex: layerZIndex('yeartext') }"
     >
       <!-- eslint-disable next-line vue/no-v-html -->
       <div
@@ -38,6 +39,7 @@
       v-if="mediaPlayerCustomBackground && !cameraIsFullScreen"
       class="base-layer"
       :class="baseLayerClasses"
+      :style="{ zIndex: layerZIndex('yeartext') }"
     >
       <q-img
         class="fit-snugly"
@@ -51,7 +53,16 @@
     <div
       v-if="activeCameraStreamId"
       class="camera-layer"
-      :class="`camera-layer--${activeCameraLayout}`"
+      :class="[
+        `camera-layer--${activeCameraLayout}`,
+        takeLayerClass('camera'),
+        { 'teo-layer-hidden': isLayerHidden('camera') },
+      ]"
+      :style="{
+        zIndex: layerZIndex('camera'),
+        ...takeLayerStyle('camera'),
+      }"
+      @animationend="clearTakeTransition"
     >
       <div class="camera-frame">
         <video
@@ -65,8 +76,20 @@
       </div>
     </div>
 
-    <!-- Window/screen capture layer, below live media -->
-    <div v-if="activeCaptureSourceId" class="capture-layer">
+    <!-- Window/screen capture layer -->
+    <div
+      v-if="activeCaptureSourceId"
+      class="capture-layer"
+      :class="[
+        takeLayerClass('capture'),
+        { 'teo-layer-hidden': isLayerHidden('capture') },
+      ]"
+      :style="{
+        zIndex: layerZIndex('capture'),
+        ...takeLayerStyle('capture'),
+      }"
+      @animationend="clearTakeTransition"
+    >
       <video
         ref="captureElement"
         autoplay
@@ -82,7 +105,14 @@
       :class="{
         'is-live': displayLayer1.isLive,
         'is-audio': isAudio(displayLayer1.url),
+        'teo-layer-hidden': isLayerHidden('media'),
+        ...takeMediaLayerClass(displayLayer1.isLive),
       }"
+      :style="{
+        zIndex: layerZIndex('media'),
+        ...takeMediaLayerStyle(displayLayer1.isLive),
+      }"
+      @animationend="clearTakeTransition"
     >
       <q-img
         v-if="isImage(displayLayer1.url) || isImageString(displayLayer1.url)"
@@ -135,7 +165,14 @@
       :class="{
         'is-live': displayLayer2.isLive,
         'is-audio': isAudio(displayLayer2.url),
+        'teo-layer-hidden': isLayerHidden('media'),
+        ...takeMediaLayerClass(displayLayer2.isLive),
       }"
+      :style="{
+        zIndex: layerZIndex('media'),
+        ...takeMediaLayerStyle(displayLayer2.isLive),
+      }"
+      @animationend="clearTakeTransition"
     >
       <q-img
         v-if="isImage(displayLayer2.url) || isImageString(displayLayer2.url)"
@@ -197,7 +234,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TeoCameraLayout, TeoCameraView } from 'src/types';
+import type { TeoCameraLayout, TeoCameraView, TeoLayerId } from 'src/types';
 
 import {
   useBroadcastChannel,
@@ -231,14 +268,23 @@ import {
 } from 'src/helpers/teo-camera-view';
 import {
   postTeoCaptureStatus,
+  readCachedLayerState,
   TEO_CAMERA_CHANNEL,
   TEO_CAMERA_LAYOUT_CHANNEL,
   TEO_CAMERA_VIEW_CHANNEL,
   TEO_CAPTURE_CHANNEL,
+  TEO_LAYERS_CHANNEL,
   TEO_SCREEN_IDENTIFY_CHANNEL,
+  TEO_TRANSITION_CHANNEL,
   TEO_YEARTEXT_CACHE_KEY,
+  type TeoLayerState,
   type TeoScreenIdentifyMessage,
+  type TeoTransitionMessage,
 } from 'src/helpers/teo-outputs';
+import {
+  DEFAULT_TEO_LAYER_ORDER,
+  normalizeTeoLayerOrder,
+} from 'src/helpers/teo-studio-layers';
 import { log } from 'src/shared/vanilla';
 import { sleep } from 'src/utils/general';
 import { mmmIconMapFn } from 'src/utils/icon-map';
@@ -637,6 +683,74 @@ const cameraView = computed(() => normalizeTeoCameraView(cameraViewData.value));
 const cameraViewStyle = computed(() => ({
   transform: teoCameraViewTransform(cameraView.value),
 }));
+
+// Studio source list: which layers are visible and how they stack. Like the
+// yeartext, the last state is cached in shared storage so an output created
+// later still starts with the stacking the operator configured.
+const cachedLayerState = ref<null | TeoLayerState>(readCachedLayerState());
+
+const { data: layerState } = useBroadcastChannel<TeoLayerState, TeoLayerState>({
+  name: TEO_LAYERS_CHANNEL,
+});
+
+const activeLayerState = computed<TeoLayerState>(() => {
+  const state = layerState.value ?? cachedLayerState.value;
+  return {
+    hidden: state?.hidden ?? [],
+    order: normalizeTeoLayerOrder(state?.order ?? DEFAULT_TEO_LAYER_ORDER),
+  };
+});
+
+// Base value leaves the screen-identify overlay (z-index 100) always on top.
+const LAYER_Z_BASE = 10;
+
+const layerZIndex = (id: TeoLayerId) => {
+  const order = activeLayerState.value.order;
+  const fromBottom = order.length - 1 - order.indexOf(id);
+  return LAYER_Z_BASE + fromBottom * 10;
+};
+
+const isLayerHidden = (id: TeoLayerId) =>
+  activeLayerState.value.hidden.includes(id);
+
+// Transitions only animate the incoming source: the outgoing one unmounts at
+// the same time, so a fade or slide-in over the remaining layers reads as the
+// take. The class is cleared when the animation ends, not on a timer, because
+// opening a camera or capture device can take longer than the transition.
+const { data: teoTransition } = useBroadcastChannel<
+  TeoTransitionMessage,
+  TeoTransitionMessage
+>({
+  name: TEO_TRANSITION_CHANNEL,
+});
+
+const pendingTransition = ref<null | TeoTransitionMessage>(null);
+
+const takeLayerClass = (target: 'camera' | 'capture' | 'media') => {
+  const transition = pendingTransition.value;
+  if (!transition || transition.target !== target) return {};
+  return { [`teo-take-${transition.type}`]: true };
+};
+
+const takeLayerStyle = (target: 'camera' | 'capture' | 'media') => {
+  const transition = pendingTransition.value;
+  if (!transition || transition.target !== target) return {};
+  return { '--teo-take-duration': `${transition.durationMs}ms` };
+};
+
+// Media lives on two alternating layers that crossfade into each other, so the
+// take animation belongs only to the one that just went live. Applying it to
+// the outgoing layer would finish the animation before the incoming one
+// started and clear the transition too early.
+const takeMediaLayerClass = (isLive: boolean) =>
+  isLive ? takeLayerClass('media') : {};
+
+const takeMediaLayerStyle = (isLive: boolean) =>
+  isLive ? takeLayerStyle('media') : {};
+
+const clearTakeTransition = () => {
+  pendingTransition.value = null;
+};
 
 const { data: teoScreenIdentify } = useBroadcastChannel<
   TeoScreenIdentifyMessage,
@@ -1117,6 +1231,7 @@ const baseLayerClasses = computed(() => ({
   'base-layer--pip': activeCameraLayout.value === 'pip',
   'base-layer--split': activeCameraLayout.value === 'split',
   'blank-screen': isTransitioning.value,
+  'teo-layer-hidden': isLayerHidden('yeartext'),
 }));
 
 const crossfadeToNewMedia = (newUrl: string) => {
@@ -1790,6 +1905,14 @@ watch(
   },
 );
 
+watch(
+  () => teoTransition.value,
+  (message) => {
+    if (isAuxiliaryOutput || !message) return;
+    pendingTransition.value = message;
+  },
+);
+
 // Identification is a black full-screen layer; never let it cover media or a
 // camera that starts while the number is still showing.
 watch(
@@ -2034,11 +2157,48 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   background-color: black;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+/* Hidden from the studio source list; kept mounted so its stream or image
+   stays ready and reappears instantly when shown again. */
+.teo-layer-hidden {
+  visibility: hidden;
+}
+
+/* Take transition: the incoming source animates in while the outgoing one
+   unmounts, which reads as a fade or a slide of the program picture. */
+.teo-take-fade {
+  animation: teo-take-fade var(--teo-take-duration, 500ms) ease-in-out;
+}
+
+.teo-take-slide {
+  animation: teo-take-slide var(--teo-take-duration, 500ms)
+    cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@keyframes teo-take-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes teo-take-slide {
+  from {
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+    opacity: 0;
+    transform: translateX(-10%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .base-layer.blank-screen {
@@ -2052,11 +2212,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   background-color: black;
-  /* z-index must be an integer - 1.5 is invalid and gets dropped (auto) by
-     Chromium. Above .base-layer (1) and tied with .display-layer (2), which
-     resolves in .display-layer's favor via DOM order (it comes later in the
-     template), matching the intended base < camera < display stacking. */
-  z-index: 2;
+  /* Stacking comes from the studio source list (layerZIndex). */
 }
 
 /* Crops the zoomed or panned camera to the part the audience should see. */
@@ -2074,8 +2230,7 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
-/* Capture sits above the idle layers but below live media (which wins the
-   tie at z-index 3 by DOM order). */
+/* Capture covers the full frame up to its place in the studio source list. */
 .capture-layer {
   position: absolute;
   top: 0;
@@ -2083,7 +2238,6 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   background-color: black;
-  z-index: 3;
 }
 
 .capture-video {
@@ -2144,12 +2298,10 @@ onBeforeUnmount(() => {
   background-color: black;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
-  z-index: 2;
 }
 
 .display-layer.is-live {
   opacity: 1;
-  z-index: 3;
 }
 
 /* Kept after .is-live (same specificity) so an audio layer stays invisible

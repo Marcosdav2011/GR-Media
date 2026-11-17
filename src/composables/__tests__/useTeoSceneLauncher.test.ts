@@ -27,6 +27,7 @@ vi.mock('src/helpers/teo-outputs', () => ({
   postTeoCamera: vi.fn(),
   postTeoCameraLayout: vi.fn(),
   postTeoCameraView: vi.fn(),
+  postTeoLayerState: vi.fn(),
   postTeoScreenIdentify: vi.fn(),
 }));
 

@@ -1,8 +1,3 @@
-import {
-  announcements,
-  releases,
-  validAnnouncements,
-} from 'app/test/vitest/mocks/github';
 import { jwLangs, jwYeartext } from 'app/test/vitest/mocks/jw';
 import { installPinia } from 'app/test/vitest/mocks/pinia';
 import { useDemoModeStore } from 'stores/demo-mode';
@@ -18,10 +13,8 @@ import { errorCatcher } from 'src/helpers/error-catcher';
 
 import {
   clearFetchCache,
-  fetchAnnouncements,
   fetchJson,
   fetchJwLanguages,
-  fetchLatestVersion,
   fetchMemorials,
   fetchPubMediaLinks,
   fetchRaw,
@@ -62,41 +55,6 @@ describe('fetchYeartext', () => {
     const yeartext = await fetchYeartext('E', 'jw.org');
     expect(yeartext.wtlocale).toBe('E');
     expect(yeartext.yeartext).toBe(jwYeartext.content);
-  });
-});
-
-describe('fetchAnnouncements', () => {
-  beforeEach(() => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify(announcements), { status: 200 }),
-    );
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('should fetch the announcements', async () => {
-    const result = await fetchAnnouncements();
-    expect(result).toHaveLength(validAnnouncements.length);
-    expect(result).toEqual(expect.arrayContaining(validAnnouncements));
-  });
-});
-
-describe('fetchLatestVersion', () => {
-  beforeEach(() => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify(releases), { status: 200 }),
-    );
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('should fetch the latest version', async () => {
-    const version = await fetchLatestVersion();
-    expect(version).toBe('1.2.3');
   });
 });
 

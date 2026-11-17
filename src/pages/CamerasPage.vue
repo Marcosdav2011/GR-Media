@@ -60,6 +60,18 @@
           <div class="teo-panel__title">{{ t('teo-monitors-title') }}</div>
           <div class="teo-panel__hint">{{ t('teo-monitors-hint') }}</div>
         </div>
+        <q-btn
+          :color="teoCamera.multiviewOpen ? 'primary' : undefined"
+          icon="mmm-fullscreen"
+          :label="
+            teoCamera.multiviewOpen
+              ? t('teo-multiview-close')
+              : t('teo-multiview-open')
+          "
+          no-caps
+          outline
+          @click="toggleMultiview"
+        />
       </div>
       <div class="teo-cameras__panel-body">
         <MonitorPreviews />
@@ -87,7 +99,7 @@ import { useTeoPlaybackTest } from 'src/composables/useTeoPlaybackTest';
 import { useTeoScreens } from 'src/composables/useTeoScreens';
 import { useCurrentStateStore } from 'src/stores/current-state';
 import { useTeoCameraStore } from 'src/stores/teo-camera';
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -132,6 +144,23 @@ const mediaIsPlaying = computed(() => currentState.mediaIsPlaying);
 const cameraOnlyMode = computed(
   () => !!currentState.currentSettings?.cameraOnlyMode,
 );
+
+const toggleMultiview = () => {
+  teoCamera.setMultiviewOpen(!teoCamera.multiviewOpen);
+};
+
+// Closing the fullscreen window with Escape leaves its button out of sync.
+let removeMultiviewClosed: (() => void) | undefined;
+
+onMounted(() => {
+  removeMultiviewClosed = globalThis.electronApi.onMultiviewWindowClosed(() => {
+    teoCamera.handleMultiviewClosed();
+  });
+});
+
+onBeforeUnmount(() => {
+  removeMultiviewClosed?.();
+});
 </script>
 
 <style scoped>

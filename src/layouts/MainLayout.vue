@@ -24,7 +24,6 @@
 
     <!-- Main content -->
     <q-page-container class="app-main-scroll main-bg">
-      <AnnouncementBanner />
       <router-view />
     </q-page-container>
 
@@ -99,7 +98,6 @@ import HeaderBase from 'components/header/HeaderBase.vue';
 import MediaPreview from 'components/media/MediaPreview.vue';
 import TimerDockPanel from 'components/media/TimerDockPanel.vue';
 import TeoOutputKeeper from 'components/teo/TeoOutputKeeper.vue';
-import AnnouncementBanner from 'components/ui/AnnouncementBanner.vue';
 import { storeToRefs } from 'pinia';
 import { useMeta, useQuasar } from 'quasar';
 import { SORTER } from 'src/constants/general';
@@ -258,7 +256,6 @@ void updateJwLanguages(online.value);
 const hasActiveDownloads = () => currentState.hasActiveMediaWork;
 
 let cacheClearTriggered = false;
-let dismissUpdatesDisabledNotification: (() => void) | undefined;
 const macosFolderPermissionPrompts = new Set<string>();
 
 type MacosFolderPermissionSetting = Extract<
@@ -1216,12 +1213,6 @@ const { post: postCurrentSlideshowAudioUrl } = useBroadcastChannel<
   name: 'slideshow-audio-url',
 });
 
-const handleAutoUpdatesToggled = (event: Event) => {
-  if (!(event as CustomEvent<boolean>).detail) return;
-  dismissUpdatesDisabledNotification?.();
-  dismissUpdatesDisabledNotification = undefined;
-};
-
 onMounted(() => {
   void cleanTempPathOnStartup();
   congregationSettings.updateCongregationsWithMissingSettings();
@@ -1232,15 +1223,10 @@ onMounted(() => {
     showCongregationSwitcher();
   }
   initListeners();
-  globalThis.addEventListener('autoUpdatesToggled', handleAutoUpdatesToggled);
 });
 
 onBeforeUnmount(() => {
   removeListenersLocal();
-  globalThis.removeEventListener(
-    'autoUpdatesToggled',
-    handleAutoUpdatesToggled,
-  );
 });
 
 watchImmediate(
@@ -1482,34 +1468,14 @@ watch(currentCongregation, async (newCongregation, oldCongregation) => {
     // --- Part 2: notifications ---
     //
 
-    const { updatesDisabled } = await import('src/utils/fs');
-
     const isBetaVersion = import.meta.env.IS_BETA;
-    const areUpdatesDisabled = await updatesDisabled();
 
-    // Priority: beta warning first
     if (isBetaVersion) {
       createTemporaryNotification({
         deferWhileDialogOpen: true,
         message: t('beta-version-warning'),
         timeout: 30_000,
         type: 'warning',
-      });
-    } else if (areUpdatesDisabled) {
-      dismissUpdatesDisabledNotification = createTemporaryNotification({
-        actions: [
-          {
-            color: 'white',
-            handler: () => {
-              void router.push('/settings/autoUpdateApp');
-            },
-            label: t('go-to-settings'),
-          },
-        ],
-        deferWhileDialogOpen: true,
-        message: t('updates-disabled-warning'),
-        timeout: 10_000,
-        type: 'info',
       });
     }
   } catch (error) {

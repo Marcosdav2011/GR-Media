@@ -1,4 +1,10 @@
-import type { TeoCameraLayout, TeoCameraScene, TeoCameraView } from 'src/types';
+import type {
+  TeoCameraLayout,
+  TeoCameraScene,
+  TeoCameraView,
+  TeoLayerId,
+  TeoTransitionType,
+} from 'src/types';
 
 import { defineStore } from 'pinia';
 import { errorCatcher } from 'src/helpers/error-catcher';
@@ -12,8 +18,17 @@ import {
   postTeoCamera,
   postTeoCameraLayout,
   postTeoCameraView,
+  postTeoLayerState,
   postTeoScreenIdentify,
+  postTeoTransition,
 } from 'src/helpers/teo-outputs';
+import {
+  DEFAULT_TEO_LAYER_ORDER,
+  moveTeoLayer,
+  normalizeTeoLayerOrder,
+  normalizeTeoTransitionMs,
+  toggleTeoLayerHidden,
+} from 'src/helpers/teo-studio-layers';
 import { uuid } from 'src/shared/vanilla';
 import { useCurrentStateStore } from 'stores/current-state';
 
@@ -22,6 +37,9 @@ interface Store {
   activeCameraLabel: string;
   activeSceneId: null | string;
   activeScreenIndex: null | number;
+  hiddenLayers: TeoLayerId[];
+  layerOrder: TeoLayerId[];
+  multiviewOpen: boolean;
   preferredCameraScreen: null | number;
   preferredOutputScreen: null | number;
   scenes: TeoCameraScene[];
@@ -29,6 +47,8 @@ interface Store {
   selectedCameraLabel: string;
   selectedLayout: TeoCameraLayout;
   studioMode: boolean;
+  transitionMs: number;
+  transitionType: TeoTransitionType;
   view: TeoCameraView;
 }
 
@@ -71,6 +91,11 @@ export const useTeoCameraStore = defineStore('teo-camera', {
       return scene;
     },
 
+    /** The multiview window was closed from inside itself (Escape). */
+    handleMultiviewClosed() {
+      this.multiviewOpen = false;
+    },
+
     /**
      * Loads a saved setup into the preview without going on air, so the
      * operator can check it before taking it live.
@@ -86,10 +111,41 @@ export const useTeoCameraStore = defineStore('teo-camera', {
       return true;
     },
 
+    moveLayer(id: TeoLayerId, direction: 'down' | 'up') {
+      this.layerOrder = moveTeoLayer(this.layerOrder, id, direction);
+      this.publishLayerState();
+    },
+
+    /**
+     * Announces the configured transition just before the incoming source is
+     * published, so the output can animate it instead of cutting.
+     */
+    postTakeTransition(target: 'camera' | 'capture' | 'media') {
+      if (this.transitionType === 'cut') return;
+      postTeoTransition({
+        durationMs: normalizeTeoTransitionMs(this.transitionMs),
+        target,
+        type: this.transitionType,
+      });
+    },
+
+    /** Makes the output adopt the current stacking and visibility at once. */
+    publishLayerState() {
+      postTeoLayerState({
+        hidden: [...this.hiddenLayers],
+        order: normalizeTeoLayerOrder(this.layerOrder),
+      });
+    },
+
     removeScene(id: string) {
       this.scenes = this.scenes.filter((scene) => scene.id !== id);
       // The camera keeps running; only the shortcut to it is gone.
       if (this.activeSceneId === id) this.activeSceneId = null;
+    },
+
+    resetLayers() {
+      this.layerOrder = [...DEFAULT_TEO_LAYER_ORDER];
+      this.hiddenLayers = [];
     },
 
     resumeCameraProjection() {
@@ -105,6 +161,7 @@ export const useTeoCameraStore = defineStore('teo-camera', {
         }
         globalThis.electronApi.moveMediaWindow(screenIndex, true);
         postTeoScreenIdentify('');
+        this.publishLayerState();
         postTeoCameraLayout(this.selectedLayout);
         postTeoCameraView(this.view);
         postTeoCamera(this.activeCameraId);
@@ -142,6 +199,28 @@ export const useTeoCameraStore = defineStore('teo-camera', {
       }
     },
 
+    setLayerHidden(id: TeoLayerId) {
+      this.hiddenLayers = toggleTeoLayerHidden(this.hiddenLayers, id);
+      this.publishLayerState();
+    },
+
+    /**
+     * Opens or closes the fullscreen multiview window. The camera preview in
+     * this window steps aside while it is open: two windows cannot hold the
+     * same camera device.
+     */
+    setMultiviewOpen(open: boolean) {
+      if (this.multiviewOpen === open) return;
+      this.multiviewOpen = open;
+      try {
+        globalThis.electronApi.toggleMultiviewWindow(open);
+      } catch (error) {
+        errorCatcher(error, {
+          contexts: { fn: { name: 'setTeoMultiviewOpen' } },
+        });
+      }
+    },
+
     /** Applies a layout to a running camera without reopening the device. */
     setSelectedLayout(layout: TeoCameraLayout) {
       if (this.selectedLayout === layout) return;
@@ -155,6 +234,29 @@ export const useTeoCameraStore = defineStore('teo-camera', {
         errorCatcher(error, {
           contexts: { fn: { name: 'setTeoCameraLayout' } },
         });
+      }
+    },
+
+    /**
+     * Layers are a studio device: leaving the mode returns the output to the
+     * plain stacking, so a hidden yeartext or media layer can't leak into a
+     * normal meeting.
+     */
+    setStudioMode(enabled: boolean) {
+      if (this.studioMode === enabled) return;
+      this.studioMode = enabled;
+      if (enabled) {
+        this.publishLayerState();
+      } else {
+        this.resetLayers();
+        this.publishLayerState();
+      }
+    },
+
+    setTransition(type: TeoTransitionType, ms?: number) {
+      this.transitionType = type;
+      if (typeof ms === 'number') {
+        this.transitionMs = normalizeTeoTransitionMs(ms);
       }
     },
 
@@ -187,6 +289,7 @@ export const useTeoCameraStore = defineStore('teo-camera', {
         toggleMediaWindowVisibility(true);
         globalThis.electronApi.moveMediaWindow(screenIndex, true);
         postTeoScreenIdentify('');
+        this.publishLayerState();
         postTeoCameraLayout(nextLayout);
         postTeoCameraView(nextView);
         postTeoCamera(deviceId);
@@ -264,6 +367,8 @@ export const useTeoCameraStore = defineStore('teo-camera', {
   },
   persist: {
     pick: [
+      'hiddenLayers',
+      'layerOrder',
       'preferredCameraScreen',
       'preferredOutputScreen',
       'scenes',
@@ -271,6 +376,8 @@ export const useTeoCameraStore = defineStore('teo-camera', {
       'selectedCameraLabel',
       'selectedLayout',
       'studioMode',
+      'transitionMs',
+      'transitionType',
       'view',
     ],
   },
@@ -279,6 +386,9 @@ export const useTeoCameraStore = defineStore('teo-camera', {
     activeCameraLabel: '',
     activeSceneId: null,
     activeScreenIndex: null,
+    hiddenLayers: [],
+    layerOrder: [...DEFAULT_TEO_LAYER_ORDER],
+    multiviewOpen: false,
     preferredCameraScreen: null,
     preferredOutputScreen: null,
     scenes: [],
@@ -286,6 +396,8 @@ export const useTeoCameraStore = defineStore('teo-camera', {
     selectedCameraLabel: '',
     selectedLayout: 'fullscreen',
     studioMode: false,
+    transitionMs: 500,
+    transitionType: 'cut',
     view: { ...IDENTITY_TEO_CAMERA_VIEW },
   }),
 });
