@@ -676,13 +676,27 @@
             </li>
             <li>Pantalla donde se muestra el cronómetro.</li>
             <li>
-              Número de partes de las secciones (por ejemplo, AYFM y LAC) y hora
-              de fin personalizada.
+              Los <strong>controles del cronómetro</strong> (iniciar, pausar,
+              avanzar de parte, reiniciar) fijos en la parte superior, mientras
+              la lista de partes se desplaza.
             </li>
-            <li>Partes personalizadas con nombre y duración.</li>
             <li>
-              Controles: iniciar, pausar, avanzar de parte, aviso de mano
-              levantada, exportar informe PDF y restablecer todos los tiempos.
+              La lista de partes, una por línea, con el nombre de cada parte, su
+              duración y su botón de inicio; la parte en curso aparece resaltada
+              en verde.
+            </li>
+            <li>
+              Con <strong>Mostrar horas de inicio previstas</strong> (activada
+              por defecto), cada parte muestra también la hora a la que debería
+              empezar.
+            </li>
+            <li>
+              Aviso de mano levantada, exportar informe PDF y restablecer todos
+              los tiempos.
+            </li>
+            <li>
+              En <strong>Avanzado</strong>: número de partes de AYFM y LAC, hora
+              de fin personalizada para CBS y WT, y partes personalizadas.
             </li>
           </ul>
           <h3>Monitor del orador</h3>
@@ -726,6 +740,26 @@
               y el reloj.
             </li>
           </ol>
+          <p>
+            La página mantiene despierta la pantalla de la tableta mientras está
+            abierta, para que no se bloquee a mitad de una parte. Usa el bloqueo
+            de pantalla del navegador cuando está permitido y, si no, un video
+            silencioso en bucle.
+          </p>
+          <p>
+            Con
+            <strong
+              >Diseño de enfoque para el control remoto del cronómetro</strong
+            >
+            activado, la tableta muestra el tiempo dentro de un anillo de
+            progreso grande que se pone amarillo en el último minuto y luego
+            rojo con el tiempo excedido (por ejemplo, +02:18). Junto al anillo
+            aparecen los participantes de Zoom con la mano levantada, en el
+            orden en que la levantaron: los cuatro primeros por su nombre y un
+            contador del resto. Cada mano nueva muestra «Mano levantada» durante
+            tres segundos. Ese diseño solo aparece mientras el aviso de mano
+            levantada está activo; desactivado, se mantiene la pantalla actual.
+          </p>
           <p>
             Si el control remoto no arranca, comprueba el puerto (puede estar
             ocupado por otro programa) y permite GR Media en el firewall de
@@ -794,11 +828,12 @@
             </li>
             <li>
               <strong>Interfaz y atajos:</strong> atajos globales y de la
-              interfaz.
+              interfaz, y los paneles de antes y después de la reunión (incluida
+              la opción de impedir que se cierren).
             </li>
             <li>
               <strong>Avanzado:</strong> actualizaciones, aceleración por
-              hardware, caché y diagnóstico.
+              hardware, caché, diagnóstico y el PIN que protege los ajustes.
             </li>
           </ul>
           <div class="help-note help-note--warning">
@@ -818,6 +853,23 @@
             y ajustes. Pulsa el nombre del perfil en la cabecera para cambiar,
             crear o exportar un perfil. No se puede cambiar de perfil mientras
             se reproduce multimedia.
+          </p>
+          <h3>Proteger los ajustes con un PIN</h3>
+          <p>
+            Si varias personas usan la misma computadora, protege los ajustes de
+            un perfil con un PIN para que nada se cambie por accidente. En
+            <strong>Ajustes → Avanzado</strong>, pulsa
+            <strong>Establecer un PIN</strong>, escribe de 4 a 8 dígitos,
+            repítelos y guarda. El PIN se guarda como un hash con sal, nunca en
+            texto plano.
+          </p>
+          <p>
+            Con un PIN puesto, al abrir Ajustes se pide antes de mostrar nada, y
+            también al eliminar el perfil. Para cambiarlo o quitarlo, usa
+            <strong>Cambiar PIN</strong> o <strong>Quitar PIN</strong> en la
+            misma tarjeta de Avanzado. El perfil se vuelve a bloquear al cerrar
+            los ajustes y al reiniciar GR Media. Si se olvida, sigue los pasos
+            de «Olvidé el PIN de los ajustes», en Solución de problemas.
           </p>
         </section>
 
@@ -1055,6 +1107,12 @@ const troubleshooting = [
   {
     answer: ['Hay multimedia reproduciéndose. Pulsa Detener primero.'],
     question: 'No puedo cambiar de página ni de perfil',
+  },
+  {
+    answer: [
+      'Solo debería hacerlo alguien autorizado para cambiar la configuración de esta aplicación. Tras tres intentos fallidos, GR Media ofrece ¿Olvidaste el PIN? dondequiera que pida el PIN. Púlsalo y deja abierta la ventana que aparece: muestra una carpeta de esta computadora. En el explorador de archivos, ve a esa carpeta y abre el archivo de texto «GR Media settings PIN reset code.txt», que GR Media acaba de crear allí. Escribe en GR Media el código de seis dígitos de ese archivo y confirma. GR Media quita el PIN y borra el archivo. Para volver a proteger los ajustes, establece un PIN nuevo en Ajustes → Avanzado.',
+    ],
+    question: 'Olvidé el PIN de los ajustes',
   },
   {
     answer: [

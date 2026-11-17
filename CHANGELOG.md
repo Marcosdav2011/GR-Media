@@ -58,6 +58,7 @@ For translations of the most important changes, see the [`./release-notes/`](./r
 
 ### 🐞 Bug Fixes
 
+- 🐞 **Meeting Quick Actions**: When GR Media was opened after the meeting's planned end time, the after-meeting panel sat at 00:00 under a sentence in the future tense. It now says when the meeting was planned to end.
 - 🐞 **Media Export**: With "Convert exported files to MP4" turned on, WAV, FLAC, OGG and M4A audio files couldn't be converted and were left out of the export. They're now converted like MP3 files.
 - 🐞 **Error Reports**: Some error reports about folders that couldn't be created could include the Windows user name. It's now removed from those too, as it already was everywhere else.
 - 🐞 **HEIC Images**: HEIC photos, dropped in or inside a playlist, now load: converting them always failed, leaving an empty JPEG file next to the photo. A HEIC that really can't be converted now shows a message instead of a blank image.

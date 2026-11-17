@@ -424,13 +424,21 @@ Pulsa **Cronómetro** en la isla de acciones. Se abre el panel con:
 
 - Tipo de ventana: **Pantalla completa** o **En ventana**.
 - Pantalla donde se muestra el cronómetro.
-- Número de partes de las secciones (por ejemplo, AYFM y LAC).
-- Hora de fin personalizada para CBS y WT.
-- Partes personalizadas (nombre y duración).
-- **Controles del cronómetro**: iniciar, pausar, avanzar de parte, reiniciar.
+- Los **controles del cronómetro** (iniciar, pausar, avanzar de parte, reiniciar),
+  fijos en la parte superior mientras la lista de partes se desplaza.
+- La lista de partes, una por línea, con el nombre de cada parte, su duración y su
+  botón de inicio; la parte en curso aparece resaltada en verde.
 - **Aviso de mano levantada**.
 - **Exportar informe PDF** de los tiempos de la reunión.
 - **Restablecer todos los tiempos**.
+
+Con la opción **Mostrar horas de inicio previstas** (activada por defecto) cada
+parte muestra también la hora a la que debería empezar, calculada desde la hora de
+inicio de la reunión. Solo cambia lo que se muestra, no cómo se cronometra.
+
+En **Avanzado** se ajusta la estructura de la reunión: número de partes de las
+secciones (por ejemplo, AYFM y LAC), hora de fin personalizada para CBS y WT, y
+partes personalizadas con su nombre y duración.
 
 ### Monitor del orador
 
@@ -454,6 +462,19 @@ Para que el orador vea el cronómetro en una tableta o teléfono:
 3. Abre el panel del cronómetro: verás una o varias direcciones web.
 4. Copia una dirección y ábrela en el navegador de la tableta.
 5. La tableta muestra la misma pantalla del cronómetro, con el aviso y el reloj.
+
+La página mantiene despierta la pantalla de la tableta mientras está abierta, para
+que no se bloquee a mitad de una parte. Usa el bloqueo de pantalla del navegador
+cuando está permitido y, si no, un video silencioso en bucle.
+
+Con **Diseño de enfoque para el control remoto del cronómetro** activado, la
+tableta muestra el tiempo dentro de un anillo de progreso grande que se pone
+amarillo en el último minuto y luego rojo con el tiempo excedido (por ejemplo,
++02:18). Junto al anillo aparecen los participantes de Zoom con la mano levantada,
+en el orden en que la levantaron: los cuatro primeros por su nombre y un contador
+del resto. Cada mano nueva muestra «Mano levantada» durante tres segundos. Ese
+diseño solo aparece mientras el aviso de mano levantada está activo; desactivado,
+se mantiene la pantalla actual.
 
 Si el control remoto no arranca, comprueba el puerto (puede estar ocupado por otro
 programa) y permite GR Media en el firewall de Windows.
@@ -485,7 +506,8 @@ Los ajustes se agrupan en:
 - **Cronómetro de la reunión** → modo, colores, cuenta atrás, control remoto,
   pantalla del monitor.
 - **Integraciones** → OBS Studio, Zoom, grabación, música, atajos.
-- **Interfaz y atajos** → atajos de teclado globales y de la interfaz.
+- **Interfaz y atajos** → atajos de teclado globales y de la interfaz, y los paneles
+  de antes y después de la reunión (incluida la opción de impedir que se cierren).
 - **Avanzado** → actualizaciones, aceleración por hardware, caché, diagnóstico.
 
 ### El ajuste más importante: activar la reproducción
@@ -510,6 +532,23 @@ Cada perfil guarda su propia congregación, idioma, horario, carpetas y ajustes.
 - No se puede cambiar de perfil mientras se reproduce multimedia.
 - La **Configuración inicial** (asistente) guía la creación de un perfil: nombre,
   idioma, días y horas de reunión, carpetas y, si se quiere, integraciones.
+
+### Proteger los ajustes con un PIN
+
+Si varias personas usan la misma computadora, protege los ajustes de un perfil con
+un PIN para que nada se cambie por accidente:
+
+1. Abre **Ajustes → Avanzado** y pulsa **Establecer un PIN**.
+2. Escribe de 4 a 8 dígitos y repítelos.
+3. Pulsa **Guardar**. El PIN se guarda como un hash con sal, nunca en texto plano.
+
+Con un PIN puesto, al abrir Ajustes se pide antes de mostrar nada, y también al
+eliminar el perfil. Para cambiarlo o quitarlo, usa **Cambiar PIN** o **Quitar PIN**
+en la misma tarjeta de Avanzado. El perfil se vuelve a bloquear al cerrar los
+ajustes y al reiniciar GR Media.
+
+Si olvidas el PIN, sigue los pasos de la sección «Olvidé el PIN de los ajustes», en
+Solución de problemas.
 
 ---
 
@@ -597,6 +636,22 @@ otra pantalla.
 ### No puedo cambiar de página ni de perfil
 
 Hay multimedia reproduciéndose. Pulsa **Detener** primero.
+
+### Olvidé el PIN de los ajustes
+
+Solo debería hacerlo alguien autorizado para cambiar la configuración de esta
+aplicación. Tras tres intentos fallidos, GR Media ofrece **¿Olvidaste el PIN?**
+dondequiera que pida el PIN. Para quitar el PIN:
+
+1. Pulsa **¿Olvidaste el PIN?** y deja abierta la ventana que aparece. Muestra una
+   carpeta de esta computadora.
+2. En el explorador de archivos, ve a esa carpeta.
+3. Abre el archivo de texto `GR Media settings PIN reset code.txt`, que GR Media
+   acaba de crear allí.
+4. Escribe en GR Media el código de seis dígitos de ese archivo y confirma.
+
+GR Media quita el PIN y borra el archivo. Para volver a proteger los ajustes,
+establece un PIN nuevo en **Ajustes → Avanzado**.
 
 ### Un archivo multimedia falta
 
