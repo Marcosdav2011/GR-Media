@@ -19,7 +19,6 @@ interface Store {
   congregations: Partial<Record<string, SettingsValues>>;
   /** Answers to the "Did you know?" feature suggestions, per profile. */
   featureNudges: Partial<Record<string, FeatureNudgeProfileState>>;
-  quickStartTourSeen: Partial<Record<string, boolean>>;
 }
 
 /**
@@ -43,28 +42,6 @@ export const transformObsPasswords = (
     ]),
   ),
 });
-
-/**
- * Marks every congregation that already existed at hydrate time as having
- * seen the post-setup quick-start tour, without touching one created later
- * in the same session (so the tour still shows for genuinely new profiles)
- * or overwriting an entry that's already present either way. Mutates (and
- * returns, for convenience at the call site) the same quickStartTourSeen
- * map that was passed in.
- * @param congregations The store's congregations map at hydrate time
- * @param quickStartTourSeen The store's quickStartTourSeen map to backfill
- */
-export const backfillQuickStartTourSeen = (
-  congregations: Store['congregations'],
-  quickStartTourSeen: Store['quickStartTourSeen'],
-): Store['quickStartTourSeen'] => {
-  Object.keys(congregations).forEach((congId) => {
-    if (!(congId in quickStartTourSeen)) {
-      quickStartTourSeen[congId] = true;
-    }
-  });
-  return quickStartTourSeen;
-};
 
 /**
  * Values used instead of `defaultSettings` when backfilling a setting that's
@@ -152,15 +129,14 @@ export const useCongregationSettingsStore = defineStore(
         delete this.congregations[id];
 
         // FE-3/FE-4 (full-audit-2026-09-04.md): these otherwise persist
-        // indefinitely (announcements/quickStartTourSeen re-saved on every
-        // subsequent debounced write; lookupPeriod only ever swept once, at
-        // next app launch, by cleanPersistedStores()). Centralized here so
-        // every caller gets it for free instead of each deletion flow having
-        // to remember to duplicate it.
+        // indefinitely (announcements re-saved on every subsequent debounced
+        // write; lookupPeriod only ever swept once, at next app launch, by
+        // cleanPersistedStores()). Centralized here so every caller gets it
+        // for free instead of each deletion flow having to remember to
+        // duplicate it.
         const congId = String(id);
         delete this.announcements[congId];
         delete this.featureNudges[congId];
-        delete this.quickStartTourSeen[congId];
         delete useJwStore().lookupPeriod[congId];
       },
       dismissAnnouncement(congId: string, id: string) {
@@ -169,10 +145,6 @@ export const useCongregationSettingsStore = defineStore(
         if (!this.announcements[congId].includes(id)) {
           this.announcements[congId].push(id);
         }
-      },
-      markQuickStartTourSeen(congId: string) {
-        if (!congId) return;
-        this.quickStartTourSeen[congId] = true;
       },
       recordFeatureNudgeResponse(
         congId: string,
@@ -297,21 +269,7 @@ export const useCongregationSettingsStore = defineStore(
       },
     },
     persist: {
-      // Upgrades any legacy plain-text obsPassword to encrypted form, and
-      // marks every congregation that already existed on disk at load time
-      // as having seen the post-setup quick-start tour - otherwise every
-      // profile that predates that feature would show it on next launch,
-      // spamming users who've long since found the footer buttons on their
-      // own. A congregation created later in the same session (via
-      // createCongregation()) isn't touched by this, so the tour still
-      // shows for genuinely new profiles going forward.
-      afterHydrate: (ctx) => {
-        backfillQuickStartTourSeen(
-          ctx.store.congregations,
-          ctx.store.quickStartTourSeen,
-        );
-        ctx.store.$persist();
-      },
+      // Upgrades any legacy plain-text obsPassword to encrypted form.
       serializer: {
         deserialize: deserializeCongregationSettings,
         serialize: (state) =>
@@ -323,7 +281,6 @@ export const useCongregationSettingsStore = defineStore(
         announcements: {},
         congregations: {},
         featureNudges: {},
-        quickStartTourSeen: {},
       };
     },
   },

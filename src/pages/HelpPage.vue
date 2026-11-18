@@ -343,6 +343,35 @@
               reproduciéndose.
             </li>
           </ul>
+          <h3>Panel de operación</h3>
+          <p>
+            En ventanas anchas, el lado derecho de la página Reunión tiene un
+            panel para operar la reunión sin cambiar de página, con tres
+            pestañas:
+          </p>
+          <ul class="help-list">
+            <li>
+              <strong>Reunión</strong>: lo que está en pantalla ahora, con el
+              botón <strong>Detener multimedia</strong>, y las secciones del día
+              con su número de elementos. Al pulsar una sección, la página se
+              desplaza hasta ella.
+            </li>
+            <li>
+              <strong>Pantallas</strong>: abre o cierra el multiview y muestra
+              una imagen fija de cada salida, con la pantalla física donde está
+              cada una.
+            </li>
+            <li>
+              <strong>Cámara</strong>: elige la cámara, la pantalla y el diseño,
+              y permite <strong>Proyectar</strong> o <strong>Detener</strong> la
+              cámara, ajustar el encuadre y lanzar las escenas guardadas. No se
+              puede proyectar cámara mientras hay multimedia reproduciéndose.
+            </li>
+          </ul>
+          <p>
+            En ventanas estrechas el panel se oculta; las mismas acciones siguen
+            en la barra de acciones y en la página Cámaras.
+          </p>
           <h3>Opciones de cada elemento</h3>
           <p>
             En el menú de opciones (tres puntos) de cada archivo puedes mover el
@@ -357,6 +386,11 @@
             del año. En Ajustes se puede previsualizar el texto del año
             siguiente y restaurar el actual. El fondo personalizado, si está
             configurado, se muestra en la misma capa.
+          </p>
+          <p>
+            Al cambiar entre cámara, captura y multimedia no se ve el fondo
+            intermedio: la salida conserva la última imagen hasta que la nueva
+            ya está dibujada.
           </p>
         </section>
 

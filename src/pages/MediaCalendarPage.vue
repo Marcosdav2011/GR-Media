@@ -75,84 +75,94 @@
     </q-card>
   </q-dialog>
   <q-page
+    class="meeting-page"
     padding
     @dragenter="dropActive"
     @dragover="dropActive"
     @dragstart="dropActive"
   >
-    <TeoCalendarHero />
-    <div v-if="bannerColumnVisible" class="col">
-      <q-slide-transition v-for="b in pageBanners" :key="b.key">
-        <div class="row">
-          <q-banner :class="b.className" rounded>
-            {{ t(b.textKey) }}
-            <template #avatar>
-              <q-avatar v-if="b.avatarClass" :class="b.avatarClass" size="lg">
-                <q-icon :name="b.icon" size="sm" />
-              </q-avatar>
-              <q-icon v-else :name="b.icon" size="lg" />
-            </template>
-            <template #action>
-              <q-btn
-                v-for="a in b.actions || []"
-                :key="a.labelKey"
-                flat
-                :label="t(a.labelKey)"
-                @click="a.onClick()"
-              />
-            </template>
-          </q-banner>
-        </div>
-      </q-slide-transition>
-      <EmptyState
-        v-if="showEmptyState"
-        :go-to-next-day-with-media="goToNextDayWithMedia"
-        :open-import-menu="openImportMenu"
-        :retry-fetch="() => fetchMedia()"
+    <div class="meeting-page__main">
+      <TeoCalendarHero />
+      <div v-if="bannerColumnVisible" class="col">
+        <q-slide-transition v-for="b in pageBanners" :key="b.key">
+          <div class="row">
+            <q-banner :class="b.className" rounded>
+              {{ t(b.textKey) }}
+              <template #avatar>
+                <q-avatar v-if="b.avatarClass" :class="b.avatarClass" size="lg">
+                  <q-icon :name="b.icon" size="sm" />
+                </q-avatar>
+                <q-icon v-else :name="b.icon" size="lg" />
+              </template>
+              <template #action>
+                <q-btn
+                  v-for="a in b.actions || []"
+                  :key="a.labelKey"
+                  flat
+                  :label="t(a.labelKey)"
+                  @click="a.onClick()"
+                />
+              </template>
+            </q-banner>
+          </div>
+        </q-slide-transition>
+        <EmptyState
+          v-if="showEmptyState"
+          :go-to-next-day-with-media="goToNextDayWithMedia"
+          :open-import-menu="openImportMenu"
+          :retry-fetch="() => fetchMedia()"
+        />
+      </div>
+      <MeetingQuickActionsPanel v-if="!showEmptyState" location="before" />
+      <template v-if="!showEmptyState">
+        <template
+          v-for="mediaList in mediaLists"
+          :key="
+            selectedDateObject?.date +
+            '-' +
+            mediaList.config?.uniqueId +
+            '-' +
+            mediaList.items?.length
+          "
+        >
+          <MediaList
+            :ref="(el) => (mediaListRefs[mediaList.sectionId] = el)"
+            :media-filter-terms="mediaFilterTerms"
+            :media-list="mediaList"
+            :open-import-menu="openImportMenu"
+            :selected-media-items="selectedMediaItems"
+            @item-clicked="handleMediaItemClick"
+            @update-media-section-bg-color="updateMediaSectionBgColor"
+            @update-media-section-label="updateMediaSectionLabel"
+          />
+        </template>
+      </template>
+      <MeetingQuickActionsPanel v-if="!showEmptyState" location="after" />
+      <q-btn
+        v-if="selectedDateObject && !selectedDayMeetingType && !showEmptyState"
+        :class="{
+          'full-width': true,
+          'dashed-border': true,
+          'big-button': true,
+        }"
+        :color="$q.dark.isActive ? 'grey-9' : 'accent-100'"
+        icon="mmm-plus"
+        :label="t('new-section')"
+        :text-color="$q.dark.isActive ? 'grey-4' : 'primary'"
+        unelevated
+        @click="addSection()"
       />
     </div>
-    <MeetingQuickActionsPanel v-if="!showEmptyState" location="before" />
-    <template v-if="!showEmptyState">
-      <template
-        v-for="mediaList in mediaLists"
-        :key="
-          selectedDateObject?.date +
-          '-' +
-          mediaList.config?.uniqueId +
-          '-' +
-          mediaList.items?.length
-        "
-      >
-        <MediaList
-          :ref="(el) => (mediaListRefs[mediaList.sectionId] = el)"
-          :media-filter-terms="mediaFilterTerms"
-          :media-list="mediaList"
-          :open-import-menu="openImportMenu"
-          :selected-media-items="selectedMediaItems"
-          @item-clicked="handleMediaItemClick"
-          @update-media-section-bg-color="updateMediaSectionBgColor"
-          @update-media-section-label="updateMediaSectionLabel"
-        />
-      </template>
-    </template>
-    <MeetingQuickActionsPanel v-if="!showEmptyState" location="after" />
-    <q-btn
-      v-if="selectedDateObject && !selectedDayMeetingType && !showEmptyState"
-      :class="{
-        'full-width': true,
-        'dashed-border': true,
-        'big-button': true,
-      }"
-      :color="$q.dark.isActive ? 'grey-9' : 'accent-100'"
-      icon="mmm-plus"
-      :label="t('new-section')"
-      :text-color="$q.dark.isActive ? 'grey-4' : 'primary'"
-      unelevated
-      @click="addSection()"
+
+    <MeetingSidebar
+      class="meeting-page__side"
+      :playing-item-label="playingItemLabel"
+      :sections="sidebarSections"
+      @select-section="scrollToSection"
+      @stop-media="stopMeetingMedia"
     />
 
     <!-- Dialog Components -->
-    <QuickStartGuide v-model="showQuickStartGuide" />
     <DialogFileImport
       v-model="showFileImport"
       v-model:jwpub-db="jwpubImportDb"
@@ -243,8 +253,8 @@ import DialogSectionPicker from 'components/dialog/DialogSectionPicker.vue';
 import EmptyState from 'components/media/EmptyState.vue';
 import MediaList from 'components/media/MediaList.vue';
 import MeetingQuickActionsPanel from 'components/media/MeetingQuickActionsPanel.vue';
+import MeetingSidebar from 'components/teo/MeetingSidebar.vue';
 import TeoCalendarHero from 'components/teo/TeoCalendarHero.vue';
-import QuickStartGuide from 'components/ui/QuickStartGuide.vue';
 import DOMPurify from 'dompurify';
 import Mousetrap from 'mousetrap';
 import { storeToRefs } from 'pinia';
@@ -332,7 +342,6 @@ import {
   tableExists,
 } from 'src/utils/sqlite';
 import { useAppSettingsStore } from 'stores/app-settings';
-import { useCongregationSettingsStore } from 'stores/congregation-settings';
 import {
   type MediaPlayingState,
   useCurrentStateStore,
@@ -512,7 +521,6 @@ const { lookupPeriod, urlVariables } = storeToRefs(jwStore);
 const currentState = useCurrentStateStore();
 const { getMeetingType } = currentState;
 const {
-  congregationSwitcherOpen,
   countItemsForSelectedDate,
   countItemsHiddenForSelectedDate,
   currentCongregation,
@@ -538,17 +546,10 @@ const { obsConnectionState, obsSceneListError } = storeToRefs(obsState);
 const meetingQuickActions = useMeetingQuickActionsStore();
 const { recordLastSongEnded } = meetingQuickActions;
 const { offerMusicAfterLastSong } = useMusicStore();
-const congregationSettingsStore = useCongregationSettingsStore();
 
 const totalFiles = ref(0);
 const currentFile = ref(0);
 const showFileImport = ref(false);
-const showQuickStartGuide = ref(false);
-// The congregation the guide was actually opened for (see UX-0 in
-// full-audit-2026-09-04.md) - captured so the eventual "mark as seen" below
-// can't misattribute to whichever congregation happens to be active if the
-// user switches congregations while the guide dialog is open.
-const quickStartGuideCongId = ref<string | undefined>(undefined);
 const showSectionPicker = ref(false);
 const showMediaPicker = ref(false);
 const selectedDocument = ref<DocumentItem | undefined>();
@@ -1158,43 +1159,6 @@ const checkCoDate = () => {
       type: 'primary',
     });
   }
-};
-
-// Replaces the wizard's own footer-button tutorial steps (previously
-// mandatory during setup) with an optional tour shown once, the first time
-// a congregation profile actually reaches this page with the footer
-// buttons visible - called from both onMounted (first mount, e.g. right
-// after the wizard finishes) and the currentCongregation watcher below
-// (switching to a different, not-yet-toured profile while this page stays
-// mounted).
-const maybeShowQuickStartGuide = () => {
-  const congId = currentCongregation.value;
-  if (!congId || congregationSettingsStore.quickStartTourSeen[congId]) return;
-  // While the congregation switcher is open (e.g. bootstrapping a brand-new
-  // profile that's about to be routed to /setup-wizard), this page is only
-  // mounted underneath it, not actually being looked at yet - the
-  // currentCongregation watcher below still fires the instant
-  // setCongregation() assigns the new id, before that redirect lands.
-  // enableMusicButton defaults to true, so without this guard a fresh,
-  // not-yet-configured congregation would immediately satisfy the check
-  // below and get marked as toured before the wizard ever ran, permanently
-  // skipping the real tour once setup actually finishes.
-  if (congregationSwitcherOpen.value) return;
-  if (
-    !currentSettings.value?.enableMediaDisplayButton &&
-    !currentSettings.value?.enableMusicButton
-  )
-    return;
-
-  // Marking "seen" happens once the guide is actually dismissed (see the
-  // showQuickStartGuide watcher below), not here. Marking it up front meant
-  // a guide that failed to render on its very first attempt - for any of the
-  // usual transient reasons (HMR timing, a layout-timing edge case, a user
-  // blinking past it) - was permanently suppressed for that congregation
-  // with no way to bring it back, since nothing ever set the flag to false
-  // again.
-  quickStartGuideCongId.value = congId;
-  showQuickStartGuide.value = true;
 };
 
 const sectionToAddTo = ref<MediaSectionIdentifier | undefined>();
@@ -2537,6 +2501,38 @@ const atRest: MediaPlayingState = {
   zoom: 1,
 };
 
+// Right sidebar: the day's sections as a jump list, and what is on screen so
+// the meeting can be run from the same window as the media.
+const sidebarSections = computed(() =>
+  mediaLists.value.map((list) => ({
+    count: (list.items ?? []).filter((item) => !item.hidden).length,
+    id: list.sectionId,
+    label: list.config?.label || t(list.config?.uniqueId || ''),
+  })),
+);
+
+const playingItemLabel = computed(() => {
+  const uniqueId = mediaPlaying.value.uniqueId;
+  if (!uniqueId) return '';
+  for (const list of mediaLists.value) {
+    const item = list.items.find((media) => media.uniqueId === uniqueId);
+    if (item) return item.title;
+  }
+  return '';
+});
+
+const scrollToSection = (sectionId: string) => {
+  const list = mediaListRefs.value[sectionId] as
+    InstanceType<typeof MediaList> | undefined;
+  const element = list?.$el as HTMLElement | undefined;
+  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const stopMeetingMedia = () => {
+  mediaPlaying.value = atRest;
+  postCustomDuration(undefined);
+};
+
 function stopSlideshowPlayback() {
   if (!mediaPlaying.value.slideshowAudioUrl) return;
 
@@ -3600,7 +3596,6 @@ onMounted(() => {
     void router.push('/settings');
   }
   checkCoDate();
-  maybeShowQuickStartGuide();
 
   watch(
     () => urlVariables.value.mediator,
@@ -3671,7 +3666,6 @@ watch(
       selectedDate.value = formatDate(new Date(), 'YYYY/MM/DD');
     }
     checkCoDate();
-    maybeShowQuickStartGuide();
     // onMounted's own fetchMedia() call only covers a fresh mount - this
     // page is reused (not remounted) across an in-place congregation switch,
     // so without this the newly selected congregation's errored/incomplete
@@ -3680,20 +3674,6 @@ watch(
     void fetchMedia();
   },
 );
-
-// Marks the quick-start tour as seen only once it's actually been shown and
-// dismissed (see UX-0 in full-audit-2026-09-04.md), not at the moment it's
-// requested to open - so a guide that never becomes visible simply gets
-// retried on the next opportunity (next mount/congregation switch) instead
-// of being permanently and silently suppressed for that congregation.
-watch(showQuickStartGuide, (isShowing, wasShowing) => {
-  if (wasShowing && !isShowing && quickStartGuideCongId.value) {
-    congregationSettingsStore.markQuickStartTourSeen(
-      quickStartGuideCongId.value,
-    );
-    quickStartGuideCongId.value = undefined;
-  }
-});
 
 watchImmediate(
   () => getCurrentMediaWindowVariables.value,
@@ -3764,6 +3744,31 @@ watch(
 </script>
 
 <style scoped>
+/* The meeting list keeps the main column; the sidebar holds the day's
+   sections, the monitors and the camera controls so a meeting can be run
+   from this window alone. */
+.meeting-page {
+  align-items: flex-start;
+  display: flex;
+  gap: 18px;
+}
+
+.meeting-page__main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.meeting-page__side {
+  flex: 0 0 330px;
+  position: sticky;
+  top: 0;
+}
+
+@media (max-width: 1100px) {
+  .meeting-page__side {
+    display: none;
+  }
+}
 .media-filter-overlay {
   border-radius: 0 0 8px 8px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);

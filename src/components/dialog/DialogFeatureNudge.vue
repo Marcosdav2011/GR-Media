@@ -182,11 +182,10 @@ const stopTrying = () => {
 };
 
 // Never for a profile the setup wizard just went through (it asked about
-// these features), before its quick-start tour, or in demo mode.
+// these features), or in demo mode.
 const isProfileReady = (congId: string) =>
   !wasFeatureNudgeShownThisSession(congId) &&
   !wasSetUpThisSession(congId) &&
-  !!congregationSettingsStore.quickStartTourSeen[congId] &&
   !isDemoModeActive();
 
 // Notifications sit above dialogs, so one still showing (like a startup

@@ -67,7 +67,6 @@ const mountNudge = async ({
       ...settings,
     },
   };
-  congregationSettings.quickStartTourSeen = { [CONGREGATION_ID]: true };
   router = createRouter({
     history: createMemoryHistory(),
     routes: [

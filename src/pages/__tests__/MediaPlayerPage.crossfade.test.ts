@@ -109,9 +109,11 @@ describe('MediaPlayerPage crossfade between two pictures', () => {
     expect(layers()[0]).toContain('is-outgoing');
 
     // Stopped before the crossfade is over: both fade out together, instead
-    // of the first picture showing again as the second one fades away.
+    // of the first picture showing again as the second one fades away. The
+    // stop first gives a camera or capture a moment to resume (until then the
+    // last picture stays up, so the background never shows in between).
     channel('media-url').value = '';
-    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(200);
     expect(layers().some((classes) => classes.includes('is-outgoing'))).toBe(
       false,
     );

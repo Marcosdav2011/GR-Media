@@ -177,6 +177,26 @@ Al reproducirlo, se envía a la pantalla multimedia y a la segunda salida.
 - No se puede cambiar de página ni de perfil mientras hay multimedia reproduciéndose.
   Detén primero la reproducción.
 
+### Panel de operación (lado derecho)
+
+En ventanas anchas, el lado derecho de la página Reunión tiene un panel para operar la
+reunión sin cambiar de página, con tres pestañas:
+
+- **Reunión**: lo que está en pantalla ahora, con el botón **Detener multimedia**, y la
+  lista de secciones del día con su número de elementos. Al pulsar una sección, la
+  página se desplaza hasta ella.
+- **Pantallas**: abre o cierra el **multiview** y muestra una imagen fija de cada salida
+  (principal, segunda salida, monitor del orador y sitio web), actualizada cada segundo,
+  con la pantalla física donde está cada una.
+- **Cámara**: permite elegir la cámara, detectar las cámaras conectadas, escoger la
+  pantalla de salida y el diseño, y **Proyectar** o **Detener** la cámara. Incluye el
+  zoom y la posición del encuadre, con su botón de restablecer, y las escenas guardadas
+  para iniciarlas con un clic. Se aplican las mismas reglas que en Cámaras: no se puede
+  proyectar cámara mientras hay multimedia reproduciéndose.
+
+En ventanas estrechas el panel se oculta para dejar espacio a la lista de la reunión;
+las mismas acciones siguen disponibles en la barra de acciones y en la página Cámaras.
+
 ### Opciones de cada elemento
 
 En el menú de opciones (tres puntos) de cada archivo puedes:
@@ -197,6 +217,9 @@ En el menú de opciones (tres puntos) de cada archivo puedes:
 Cuando no hay multimedia reproduciéndose, la salida muestra el **texto del año**.
 En Ajustes se puede previsualizar el texto del año del año siguiente y restaurar el
 actual. El fondo personalizado, si está configurado, se muestra en la misma capa.
+
+Al cambiar entre cámara, captura y multimedia no se ve el fondo intermedio: la salida
+conserva la última imagen hasta que la nueva ya está dibujada.
 
 ---
 

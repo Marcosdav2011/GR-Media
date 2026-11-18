@@ -51,7 +51,7 @@
 
     <!-- Camera background layer -->
     <div
-      v-if="activeCameraStreamId"
+      v-if="activeCameraStreamId || cameraPosterUrl"
       class="camera-layer"
       :class="[
         `camera-layer--${activeCameraLayout}`,
@@ -66,6 +66,7 @@
     >
       <div class="camera-frame">
         <video
+          v-show="!!activeCameraStreamId"
           ref="cameraElement"
           autoplay
           class="camera-video"
@@ -73,12 +74,21 @@
           playsinline
           :style="cameraViewStyle"
         />
+        <!-- Released camera: its last frame stands in until the media that
+             replaces it has painted, so the output never flashes the
+             background between sources. -->
+        <img
+          v-if="!activeCameraStreamId"
+          class="camera-video"
+          :src="cameraPosterUrl"
+          :style="cameraViewStyle"
+        />
       </div>
     </div>
 
     <!-- Window/screen capture layer -->
     <div
-      v-if="activeCaptureSourceId"
+      v-if="activeCaptureSourceId || capturePosterUrl"
       class="capture-layer"
       :class="[
         takeLayerClass('capture'),
@@ -91,11 +101,17 @@
       @animationend="clearTakeTransition"
     >
       <video
+        v-show="!!activeCaptureSourceId"
         ref="captureElement"
         autoplay
         class="capture-video"
         muted
         playsinline
+      />
+      <img
+        v-if="!activeCaptureSourceId"
+        class="capture-video"
+        :src="capturePosterUrl"
       />
     </div>
 
@@ -658,6 +674,12 @@ const activeCaptureSourceId = computed(() =>
   isAuxiliaryOutput ? '' : captureSourceId.value,
 );
 
+// Last frame of a camera or capture that has just stopped projecting. The
+// output keeps showing it instead of the background until the media that
+// replaces it has painted, which is what used to flash between sources.
+const cameraPosterUrl = ref('');
+const capturePosterUrl = ref('');
+
 // How the camera shares the output with the yeartext, chosen in the main
 // window. The auxiliary output never shows a camera, so it stays full screen.
 const { data: cameraLayoutData } = useBroadcastChannel<
@@ -672,7 +694,9 @@ const cameraLayout = computed<TeoCameraLayout>(
 );
 
 const activeCameraLayout = computed<TeoCameraLayout>(() =>
-  activeCameraStreamId.value ? cameraLayout.value : 'fullscreen',
+  activeCameraStreamId.value || cameraPosterUrl.value
+    ? cameraLayout.value
+    : 'fullscreen',
 );
 
 const cameraIsFullScreen = computed(
@@ -1280,6 +1304,7 @@ const crossfadeToNewMedia = (newUrl: string) => {
     }
 
     nextLayer.value.isLive = true;
+    releaseSourcePostersAfterFade();
     if (!currentLiveLayer || currentLiveLayer.value === nextLayer.value) {
       isTransitioning.value = false;
       return;
@@ -1392,6 +1417,94 @@ const clearCurrentMedia = () => {
       }
     }, fadeOutDurationInMilliseconds); // Match the CSS transition duration
   }
+};
+
+// Draws the element's current picture into an image URL, so a released
+// camera or capture can keep showing its last frame without the device.
+const grabVideoFrame = (element?: HTMLVideoElement | null) => {
+  if (!element?.videoWidth || !element.videoHeight) return '';
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = element.videoWidth;
+    canvas.height = element.videoHeight;
+    const context = canvas.getContext('2d');
+    if (!context) return '';
+    context.drawImage(element, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.92);
+  } catch (error) {
+    errorCatcher(error, { contexts: { fn: { name: 'grabVideoFrame' } } });
+    return '';
+  }
+};
+
+let posterReleaseTimer: ReturnType<typeof setTimeout> | undefined;
+
+const releaseSourcePosters = () => {
+  if (posterReleaseTimer) {
+    clearTimeout(posterReleaseTimer);
+    posterReleaseTimer = undefined;
+  }
+  cameraPosterUrl.value = '';
+  capturePosterUrl.value = '';
+};
+
+// A poster only has to cover the incoming source's fade-in; after that the
+// media layer sits on top of it, so holding it longer would only keep a stale
+// picture around.
+const releaseSourcePostersAfterFade = () => {
+  if (!cameraPosterUrl.value && !capturePosterUrl.value) return;
+  if (posterReleaseTimer) clearTimeout(posterReleaseTimer);
+  posterReleaseTimer = setTimeout(
+    releaseSourcePosters,
+    fadeOutDurationInMilliseconds + 150,
+  );
+};
+
+// Stopping media hands the output back to a camera or capture, which needs a
+// moment to open. The last media frame stays up while that source starts, so
+// the yeartext never shows through in between; without an assigned source
+// the frame is released almost immediately.
+const INCOMING_SOURCE_WAIT_MS = 120;
+const INCOMING_FRAME_WAIT_MS = 1500;
+const INCOMING_POLL_MS = 40;
+
+const hasPaintedFrame = (element?: HTMLVideoElement | null) =>
+  !!element && element.videoWidth > 0 && element.videoHeight > 0;
+
+const waitForIncomingSource = async () => {
+  const deadline = Date.now() + INCOMING_SOURCE_WAIT_MS;
+  while (Date.now() < deadline) {
+    if (activeCameraStreamId.value || activeCaptureSourceId.value) return true;
+    await sleep(INCOMING_POLL_MS); // NOSONAR: sequential - waits for a source
+  }
+  return false;
+};
+
+const waitForIncomingFrame = async () => {
+  const deadline = Date.now() + INCOMING_FRAME_WAIT_MS;
+  while (Date.now() < deadline) {
+    if (
+      hasPaintedFrame(cameraElement.value) ||
+      hasPaintedFrame(captureElement.value)
+    ) {
+      return;
+    }
+    await sleep(INCOMING_POLL_MS); // NOSONAR: sequential - waits for a frame
+  }
+};
+
+let clearMediaWaitToken = 0;
+let holdingOutputForIncomingSource = false;
+
+const clearMediaWhenIncomingIsReady = async () => {
+  const token = ++clearMediaWaitToken;
+  holdingOutputForIncomingSource = true;
+  if (await waitForIncomingSource()) {
+    await waitForIncomingFrame();
+  }
+  holdingOutputForIncomingSource = false;
+  if (token !== clearMediaWaitToken) return;
+  clearCurrentMedia();
 };
 
 const { data: urlVariables } = useBroadcastChannel<
@@ -1821,11 +1934,15 @@ watch(
 
     // Handle crossfade logic
     if (newUrl && newUrl !== oldUrl) {
+      // A new source owns the output now; a clear still waiting for a camera
+      // to resume must not fade it away.
+      clearMediaWaitToken++;
       // New media URL - start crossfade
       crossfadeToNewMedia(newUrl);
     } else if (!newUrl && oldUrl) {
-      // Media URL cleared - fade out current media
-      clearCurrentMedia();
+      // Media URL cleared - hand the output back only once the camera or
+      // capture replacing it has a picture to show.
+      void clearMediaWhenIncomingIsReady();
     }
 
     // Clean up any existing event handlers when media URL changes
@@ -1959,12 +2076,19 @@ watchImmediate(
     );
     if (!deviceId) {
       if (cameraElement.value) {
+        // Only a media start explains a suspension without the operator
+        // stopping the camera; otherwise the yeartext should come back.
+        const poster = mediaPlayingUrl.value
+          ? grabVideoFrame(cameraElement.value)
+          : '';
+        cameraPosterUrl.value = poster;
         cameraElement.value.pause();
         stopMediaStreamTracks(cameraElement.value.srcObject);
         cameraElement.value.srcObject = null;
       }
       return;
     }
+    releaseSourcePosters();
 
     // Wait for the camera element to be available in the DOM (v-if)
     let retries = 0;
@@ -2043,12 +2167,17 @@ watchImmediate(
 
     if (!sourceId) {
       if (captureElement.value) {
+        const poster = mediaPlayingUrl.value
+          ? grabVideoFrame(captureElement.value)
+          : '';
+        capturePosterUrl.value = poster;
         captureElement.value.pause();
         stopMediaStreamTracks(captureElement.value.srcObject);
         captureElement.value.srcObject = null;
       }
       return;
     }
+    capturePosterUrl.value = '';
 
     let retries = 0;
     while (!captureElement.value && retries < 60) {
@@ -2089,7 +2218,7 @@ watchImmediate(
 watchImmediate(
   () => mediaPlayingUrl.value,
   (url) => {
-    if (!url && !videoStreaming.value) {
+    if (!url && !videoStreaming.value && !holdingOutputForIncomingSource) {
       log(
         '🎬 [mediaPlayingUrl] No media playing, ensuring layers are not live',
         'mediaPlayer',
@@ -2167,6 +2296,7 @@ onBeforeUnmount(() => {
   cleanupMediaElement(captureElement.value);
   stopZoomPanAnimation();
   if (screenIdentifyTimer) clearTimeout(screenIdentifyTimer);
+  if (posterReleaseTimer) clearTimeout(posterReleaseTimer);
 });
 </script>
 

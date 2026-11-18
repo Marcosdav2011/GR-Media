@@ -3,7 +3,6 @@ import { defaultSettings } from 'src/constants/settings';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  backfillQuickStartTourSeen,
   clearObsPasswordEncryptionCache,
   deserializeCongregationSettings,
   serializeCongregationSettings,
@@ -11,46 +10,6 @@ import {
   useCongregationSettingsStore,
 } from '../congregation-settings';
 import { useJwStore } from '../jw';
-
-describe('backfillQuickStartTourSeen', () => {
-  it('marks a pre-existing congregation missing from quickStartTourSeen as seen', () => {
-    const result = backfillQuickStartTourSeen(
-      { abc: { ...defaultSettings } },
-      {},
-    );
-
-    expect(result.abc).toBe(true);
-  });
-
-  it('does not touch a congregation not present in congregations (e.g. created later in the same session, after hydrate already ran)', () => {
-    const quickStartTourSeen = {};
-
-    const result = backfillQuickStartTourSeen({}, quickStartTourSeen);
-
-    expect(result).toEqual({});
-  });
-
-  it('does not overwrite an existing entry, seen or unseen', () => {
-    const result = backfillQuickStartTourSeen(
-      { abc: { ...defaultSettings }, def: { ...defaultSettings } },
-      { abc: false, def: true },
-    );
-
-    expect(result.abc).toBe(false);
-    expect(result.def).toBe(true);
-  });
-
-  it('mutates and returns the same object that was passed in', () => {
-    const quickStartTourSeen = {};
-
-    const result = backfillQuickStartTourSeen(
-      { abc: { ...defaultSettings } },
-      quickStartTourSeen,
-    );
-
-    expect(result).toBe(quickStartTourSeen);
-  });
-});
 
 describe('transformObsPasswords', () => {
   it('runs the transform on congregations with a non-empty obsPassword', () => {
@@ -61,7 +20,6 @@ describe('transformObsPasswords', () => {
         def: { ...defaultSettings, obsPassword: null },
       },
       featureNudges: {},
-      quickStartTourSeen: {},
     };
 
     const result = transformObsPasswords(state, (value) => `T(${value})`);
@@ -75,7 +33,6 @@ describe('transformObsPasswords', () => {
       announcements: {},
       congregations: { abc: { ...defaultSettings, obsPassword: 'hunter2' } },
       featureNudges: {},
-      quickStartTourSeen: {},
     };
 
     transformObsPasswords(state, (value) => `T(${value})`);
@@ -102,7 +59,6 @@ describe('serializeCongregationSettings / deserializeCongregationSettings', () =
       announcements: {},
       congregations: { abc: { ...defaultSettings, obsPassword: 'hunter2' } },
       featureNudges: {},
-      quickStartTourSeen: {},
     };
 
     const serialized = serializeCongregationSettings(state);
@@ -126,7 +82,6 @@ describe('serializeCongregationSettings / deserializeCongregationSettings', () =
       announcements: {},
       congregations: { abc: { ...defaultSettings, obsPassword: '' } },
       featureNudges: {},
-      quickStartTourSeen: {},
     };
 
     const serialized = serializeCongregationSettings(state);
@@ -143,7 +98,6 @@ describe('obsPassword encryption caching', () => {
     announcements: {},
     congregations: { abc: { ...defaultSettings, obsPassword } },
     featureNudges: {},
-    quickStartTourSeen: {},
   });
 
   beforeEach(() => {
@@ -236,7 +190,6 @@ describe('obsPassword encryption caching', () => {
         abc: { ...defaultSettings, obsPassword: 'enc:hunter2' },
       },
       featureNudges: {},
-      quickStartTourSeen: {},
     });
 
     // Hydrate: decrypt the persisted ciphertext back to plaintext in memory.
@@ -258,27 +211,25 @@ describe('obsPassword encryption caching', () => {
 });
 
 // FE-3/FE-4 (full-audit-2026-09-04.md): deleteCongregation() previously only
-// removed the congregations map entry - announcements, quickStartTourSeen,
-// and the jw store's lookupPeriod entry all persisted indefinitely.
+// removed the congregations map entry - announcements and the jw store's
+// lookupPeriod entry all persisted indefinitely.
 describe('deleteCongregation sibling-record cleanup', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  it('removes announcements, quickStartTourSeen, and lookupPeriod for the deleted congregation', () => {
+  it('removes announcements and lookupPeriod for the deleted congregation', () => {
     const store = useCongregationSettingsStore();
     const jwStore = useJwStore();
 
     store.congregations['abc'] = { ...defaultSettings };
     store.announcements['abc'] = ['announcement-1'];
-    store.quickStartTourSeen['abc'] = true;
     jwStore.lookupPeriod['abc'] = [];
 
     store.deleteCongregation('abc');
 
     expect(store.congregations['abc']).toBeUndefined();
     expect(store.announcements['abc']).toBeUndefined();
-    expect(store.quickStartTourSeen['abc']).toBeUndefined();
     expect(jwStore.lookupPeriod['abc']).toBeUndefined();
   });
 
@@ -289,14 +240,12 @@ describe('deleteCongregation sibling-record cleanup', () => {
     store.congregations['abc'] = { ...defaultSettings };
     store.congregations['def'] = { ...defaultSettings };
     store.announcements['def'] = ['announcement-2'];
-    store.quickStartTourSeen['def'] = true;
     jwStore.lookupPeriod['def'] = [];
 
     store.deleteCongregation('abc');
 
     expect(store.congregations['def']).toBeDefined();
     expect(store.announcements['def']).toEqual(['announcement-2']);
-    expect(store.quickStartTourSeen['def']).toBe(true);
     expect(jwStore.lookupPeriod['def']).toEqual([]);
   });
 });
